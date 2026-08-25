@@ -25,6 +25,7 @@ use crate::provider::glm::GLMLanguageModelProvider;
 use crate::provider::nim::NimLanguageModelProvider;
 use crate::provider::tokenrouter::TokenRouterLanguageModelProvider;
 use crate::provider::justwoker::JustWokerLanguageModelProvider;
+use crate::provider::nextrouter::NextRouterLanguageModelProvider;
 use crate::provider::zen::ZenLanguageModelProvider;
 use crate::provider::kilo::KiloLanguageModelProvider;
 use crate::provider::lmstudio::LmStudioLanguageModelProvider;
@@ -300,6 +301,14 @@ fn register_language_model_providers(
     );
     registry.register_provider(
         Arc::new(JustWokerLanguageModelProvider::new(
+            client.http_client(),
+            credentials_provider.clone(),
+            cx,
+        )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(NextRouterLanguageModelProvider::new(
             client.http_client(),
             credentials_provider.clone(),
             cx,
