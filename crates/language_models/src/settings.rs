@@ -6,10 +6,13 @@ use settings::RegisterSetting;
 use crate::provider::{
     anthropic, anthropic::AnthropicSettings, anthropic_compatible::AnthropicCompatibleSettings,
     bedrock, bedrock::AmazonBedrockSettings, cloud::ZedDotDevSettings, deepseek::DeepSeekSettings,
-    google::GoogleSettings, llama_cpp::LlamaCppSettings, lmstudio::LmStudioSettings, mistral,
+    google::GoogleSettings, nim::NimSettings,
+    llama_cpp::LlamaCppSettings, glm::GLMSettings, lmstudio::LmStudioSettings, mistral,
     mistral::MistralSettings, ollama::OllamaSettings, open_ai::OpenAiSettings,
     open_ai_compatible::OpenAiCompatibleSettings, open_router, open_router::OpenRouterSettings,
     opencode, opencode::OpenCodeSettings, resolve_custom_headers,
+    tokenrouter::TokenRouterSettings, kilo::KiloSettings, justwoker::JustWokerSettings,
+    zen::ZenSettings,
     vercel_ai_gateway::VercelAiGatewaySettings, x_ai::XAiSettings,
 };
 
@@ -21,6 +24,12 @@ pub struct AllLanguageModelSettings {
     pub deepseek: DeepSeekSettings,
     pub google: GoogleSettings,
     pub llama_cpp: LlamaCppSettings,
+    pub glm: GLMSettings,
+    pub nim: NimSettings,
+    pub tokenrouter: TokenRouterSettings,
+    pub justwoker: JustWokerSettings,
+    pub zen: ZenSettings,
+    pub kilo: KiloSettings,
     pub lmstudio: LmStudioSettings,
     pub mistral: MistralSettings,
     pub ollama: OllamaSettings,
@@ -55,6 +64,12 @@ impl settings::Settings for AllLanguageModelSettings {
         let deepseek = language_models.deepseek.unwrap();
         let google = language_models.google.unwrap();
         let llama_cpp = language_models.llama_cpp.unwrap();
+        let glm = language_models.glm.unwrap_or_default();
+        let nim = language_models.nim.unwrap_or_default();
+        let tokenrouter = language_models.tokenrouter.unwrap_or_default();
+        let justwoker = language_models.justwoker.unwrap_or_default();
+        let zen = language_models.zen.unwrap_or_default();
+        let kilo = language_models.kilo.unwrap_or_default();
         let lmstudio = language_models.lmstudio.unwrap();
         let mistral = language_models.mistral.unwrap();
         let ollama = language_models.ollama.unwrap();
@@ -121,11 +136,46 @@ impl settings::Settings for AllLanguageModelSettings {
                 custom_headers: custom_headers_from("Google AI", google.custom_headers, &[]),
             },
             llama_cpp: LlamaCppSettings {
-                api_url: llama_cpp.api_url.unwrap(),
+                api_url: llama_cpp.api_url.clone().unwrap(),
                 auto_discover: llama_cpp.auto_discover.unwrap_or(true),
-                available_models: llama_cpp.available_models.unwrap_or_default(),
+                available_models: llama_cpp.available_models.clone().unwrap_or_default(),
                 context_window: llama_cpp.context_window,
-                custom_headers: custom_headers_from("llama.cpp", llama_cpp.custom_headers, &[]),
+                custom_headers: custom_headers_from("llama.cpp", llama_cpp.custom_headers.clone(), &[]),
+            },
+            glm: GLMSettings {
+                api_url: glm.api_url.unwrap_or_default(),
+                auto_discover: glm.auto_discover.unwrap_or(true),
+                available_models: glm.available_models.unwrap_or_default(),
+                context_window: glm.context_window,
+                custom_headers: custom_headers_from("llama.cpp_clone", glm.custom_headers, &[]),
+            },
+            nim: NimSettings {
+                api_url: nim.api_url.unwrap_or_default(),
+                auto_discover: nim.auto_discover.unwrap_or(true),
+                available_models: nim.available_models.unwrap_or_default(),
+                context_window: nim.context_window,
+                custom_headers: custom_headers_from("nim", nim.custom_headers, &[]),
+                nim_filter_url: nim.nim_filter_url,
+            },
+            tokenrouter: TokenRouterSettings {
+                api_url: tokenrouter.api_url.unwrap_or_default(),
+                available_models: tokenrouter.available_models.unwrap_or_default(),
+                custom_headers: custom_headers_from("tokenrouter", tokenrouter.custom_headers, &[]),
+            },
+            justwoker: JustWokerSettings {
+                api_url: justwoker.api_url.unwrap_or_default(),
+                available_models: justwoker.available_models.unwrap_or_default(),
+                custom_headers: custom_headers_from("justwoker", justwoker.custom_headers, &[]),
+            },
+            zen: ZenSettings {
+                api_url: zen.api_url.unwrap_or_default(),
+                available_models: zen.available_models.unwrap_or_default(),
+                custom_headers: custom_headers_from("zen", zen.custom_headers, &[]),
+            },
+            kilo: KiloSettings {
+                api_url: kilo.api_url.unwrap_or_default(),
+                available_models: kilo.available_models.unwrap_or_default(),
+                custom_headers: custom_headers_from("cognix-kilo", kilo.custom_headers, &[]),
             },
             lmstudio: LmStudioSettings {
                 api_url: lmstudio.api_url.unwrap(),

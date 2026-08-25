@@ -1,0 +1,13 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "qwen/qwen3.8-max-free",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "qwen-ai",
+      "reasoning_efforts": ["low", "medium", "xhigh"],
+      "default_reasoning_effort": "medium"
+    }
+  ]
+}
