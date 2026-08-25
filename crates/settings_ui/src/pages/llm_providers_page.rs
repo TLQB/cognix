@@ -27,7 +27,7 @@ pub(crate) fn render_llm_providers_page(
     window: &mut Window,
     cx: &mut Context<SettingsWindow>,
 ) -> AnyElement {
-    let hidden_provider_id = ["cognix.glm", "cognix.nim", "cognix.tokenrouter", "cognix.kilo", "cognix.justwoker", "cognix.zen"];
+    let hidden_provider_id = ["cognix.glm", "cognix.nim", "cognix.tokenrouter", "cognix.kilo", "cognix.justwoker", "cognix.nextrouter", "cognix.zen"];
     let providers = LanguageModelRegistry::read_global(cx)
         .visible_providers()
         .into_iter()
