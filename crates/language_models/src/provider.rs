@@ -16,6 +16,7 @@ pub mod glm;
 pub mod nim;
 pub mod tokenrouter;
 pub mod justwoker;
+pub mod nextrouter;
 pub mod zen;
 pub mod lmstudio;
 pub mod mistral;
