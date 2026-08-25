@@ -12,6 +12,7 @@ use crate::provider::{
     open_ai_compatible::OpenAiCompatibleSettings, open_router, open_router::OpenRouterSettings,
     opencode, opencode::OpenCodeSettings, resolve_custom_headers,
     tokenrouter::TokenRouterSettings, kilo::KiloSettings, justwoker::JustWokerSettings,
+    nextrouter::NextRouterSettings,
     zen::ZenSettings,
     vercel_ai_gateway::VercelAiGatewaySettings, x_ai::XAiSettings,
 };
@@ -28,6 +29,7 @@ pub struct AllLanguageModelSettings {
     pub nim: NimSettings,
     pub tokenrouter: TokenRouterSettings,
     pub justwoker: JustWokerSettings,
+    pub nextrouter: NextRouterSettings,
     pub zen: ZenSettings,
     pub kilo: KiloSettings,
     pub lmstudio: LmStudioSettings,
@@ -68,6 +70,7 @@ impl settings::Settings for AllLanguageModelSettings {
         let nim = language_models.nim.unwrap_or_default();
         let tokenrouter = language_models.tokenrouter.unwrap_or_default();
         let justwoker = language_models.justwoker.unwrap_or_default();
+        let nextrouter = language_models.nextrouter.unwrap_or_default();
         let zen = language_models.zen.unwrap_or_default();
         let kilo = language_models.kilo.unwrap_or_default();
         let lmstudio = language_models.lmstudio.unwrap();
@@ -166,6 +169,11 @@ impl settings::Settings for AllLanguageModelSettings {
                 api_url: justwoker.api_url.unwrap_or_default(),
                 available_models: justwoker.available_models.unwrap_or_default(),
                 custom_headers: custom_headers_from("justwoker", justwoker.custom_headers, &[]),
+            },
+            nextrouter: NextRouterSettings {
+                api_url: nextrouter.api_url.unwrap_or_default(),
+                available_models: nextrouter.available_models.unwrap_or_default(),
+                custom_headers: custom_headers_from("nextrouter", nextrouter.custom_headers, &[]),
             },
             zen: ZenSettings {
                 api_url: zen.api_url.unwrap_or_default(),
