@@ -25,6 +25,8 @@ pub struct AllLanguageModelSettingsContent {
     pub tokenrouter: Option<TokenRouterSettingsContent>,
     #[serde(rename = "justwoker")]
     pub justwoker: Option<JustWokerSettingsContent>,
+    #[serde(rename = "nextrouter")]
+    pub nextrouter: Option<NextRouterSettingsContent>,
     #[serde(rename = "zen")]
     pub zen: Option<ZenSettingsContent>,
     #[serde(rename = "cognix.kilo")]
@@ -387,6 +389,14 @@ pub struct TokenRouterSettingsContent {
 #[with_fallible_options]
 #[derive(Default, Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, MergeFrom)]
 pub struct JustWokerSettingsContent {
+    pub api_url: Option<String>,
+    pub available_models: Option<Vec<LlamaCppAvailableModel>>,
+    pub custom_headers: Option<HashMap<String, String>>,
+}
+
+#[with_fallible_options]
+#[derive(Default, Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, MergeFrom)]
+pub struct NextRouterSettingsContent {
     pub api_url: Option<String>,
     pub available_models: Option<Vec<LlamaCppAvailableModel>>,
     pub custom_headers: Option<HashMap<String, String>>,
