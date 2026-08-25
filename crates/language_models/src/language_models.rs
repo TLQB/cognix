@@ -21,6 +21,12 @@ use crate::provider::cloud::CloudLanguageModelProvider;
 use crate::provider::copilot_chat::CopilotChatLanguageModelProvider;
 use crate::provider::google::GoogleLanguageModelProvider;
 use crate::provider::llama_cpp::LlamaCppLanguageModelProvider;
+use crate::provider::glm::GLMLanguageModelProvider;
+use crate::provider::nim::NimLanguageModelProvider;
+use crate::provider::tokenrouter::TokenRouterLanguageModelProvider;
+use crate::provider::justwoker::JustWokerLanguageModelProvider;
+use crate::provider::zen::ZenLanguageModelProvider;
+use crate::provider::kilo::KiloLanguageModelProvider;
 use crate::provider::lmstudio::LmStudioLanguageModelProvider;
 pub use crate::provider::mistral::MistralLanguageModelProvider;
 use crate::provider::ollama::OllamaLanguageModelProvider;
@@ -266,6 +272,50 @@ fn register_language_model_providers(
             credentials_provider.clone(),
             cx,
         )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(GLMLanguageModelProvider::new(
+            client.http_client(),
+            credentials_provider.clone(),
+            cx,
+        )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(NimLanguageModelProvider::new(
+            client.http_client(),
+            credentials_provider.clone(),
+            cx,
+        )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(TokenRouterLanguageModelProvider::new(
+            client.http_client(),
+            credentials_provider.clone(),
+            cx,
+        )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(JustWokerLanguageModelProvider::new(
+            client.http_client(),
+            credentials_provider.clone(),
+            cx,
+        )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(ZenLanguageModelProvider::new(
+            client.http_client(),
+            credentials_provider.clone(),
+            cx,
+        )),
+        cx,
+    );
+    registry.register_provider(
+        Arc::new(KiloLanguageModelProvider::new(client.http_client(), cx)),
         cx,
     );
     registry.register_provider(
