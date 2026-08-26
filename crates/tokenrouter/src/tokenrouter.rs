@@ -1,7 +1,7 @@
 use anyhow::{Context as _, Result, anyhow};
 use futures::{AsyncBufReadExt, AsyncReadExt, StreamExt, io::BufReader, stream::BoxStream};
 use http_client::{
-    AsyncBody, CustomHeaders, HttpClient, HttpRequestExt, Method, Request as HttpRequest,
+    AsyncBody, CustomHeaders, HttpClient, HttpRequestExt, Method,
     RequestBuilderExt, http,
 };
 use serde::{Deserialize, Serialize};

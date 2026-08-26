@@ -25,9 +25,7 @@ use std::pin::Pin;
 use std::sync::LazyLock;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::Duration;
-use ui::{
-    ButtonLike, ButtonLink, ConfiguredApiCard, Divider, List, ListBulletItem, Tooltip, prelude::*,
-};
+use ui::prelude::*;
 use util::ResultExt;
 
 use crate::AllLanguageModelSettings;
