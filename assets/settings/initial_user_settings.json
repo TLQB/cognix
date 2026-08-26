@@ -9,7 +9,7 @@
 {
   "language_models": {
    "cognix.glm": {
-      "api_url": "https://api.lelouch.indevs.in"
+      "api_url": "https://glm.cognix.sryze.cc"
    },
    "nim": {
       "api_url": "https://integrate.api.nvidia.com",
