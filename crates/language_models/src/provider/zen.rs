@@ -366,7 +366,6 @@ fn build_zen_request(
     }
 
     let supports_thinking = true;
-    let reasoning_effort = resolve_reasoning_effort(&request);
 
     let mut messages = Vec::new();
     for message in request.messages {
@@ -521,40 +520,9 @@ fn build_zen_request(
         stream_options: Some(zen::StreamOptions {
             include_usage: true,
         }),
-        reasoning_effort,
     })
 }
 
-// The upstream accepts the same OpenAI-style effort values on every model.
-const REASONING_EFFORT_LEVELS: &[(&str, &str)] =
-    &[("low", "Low"), ("medium", "Medium"), ("high", "High")];
-
-const DEFAULT_REASONING_EFFORT: &str = "medium";
-
-fn supported_effort_levels() -> Vec<LanguageModelEffortLevel> {
-    REASONING_EFFORT_LEVELS
-        .iter()
-        .map(|(value, label)| LanguageModelEffortLevel {
-            name: (*label).into(),
-            value: (*value).into(),
-            is_default: *value == DEFAULT_REASONING_EFFORT,
-        })
-        .collect()
-}
-
-fn resolve_reasoning_effort(request: &LanguageModelRequest) -> Option<String> {
-    if !request.thinking_allowed {
-        return None;
-    }
-
-    let chosen = request
-        .thinking_effort
-        .as_deref()
-        .filter(|effort| REASONING_EFFORT_LEVELS.iter().any(|(v, _)| *v == *effort))
-        .unwrap_or(DEFAULT_REASONING_EFFORT);
-
-    Some(chosen.to_string())
-}
 
 impl LanguageModel for ZenLanguageModel {
     fn id(&self) -> LanguageModelId {
@@ -589,9 +557,6 @@ impl LanguageModel for ZenLanguageModel {
         true
     }
 
-    fn supported_effort_levels(&self) -> Vec<LanguageModelEffortLevel> {
-        supported_effort_levels()
-    }
 
     fn telemetry_id(&self) -> String {
         format!("{PROVIDER_ID}/{}", self.name)
