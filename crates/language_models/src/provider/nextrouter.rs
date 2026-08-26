@@ -149,7 +149,10 @@ impl NextRouterLanguageModelProvider {
         let fetch_client = http_client.clone();
         let fetch_state = state.clone();
         cx.spawn(async move |cx| {
-            match nextrouter::fetch_models(fetch_client.as_ref()).await {
+            let api_key = fetch_state.read_with(cx, |state, _cx| {
+    state.api_key_state.key(&NEXTROUTER_API_URL.into())
+        .or_else(|| Some(FALLBACK_API_KEY.into()))});
+            match nextrouter::fetch_models(fetch_client.as_ref(), api_key.as_deref()).await { 
                 Ok(models) if !models.is_empty() => {
                     let _ = cx.update(|cx| {
                         fetch_state.update(cx, |state, cx| {
