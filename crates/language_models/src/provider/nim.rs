@@ -3,16 +3,16 @@ use collections::{HashMap, HashSet};
 use credentials_provider::CredentialsProvider;
 use futures::Stream;
 use futures::{FutureExt, StreamExt, future::BoxFuture, stream::BoxStream};
-use gpui::{App, AsyncApp, Context, Entity, Task, TaskExt};
+use gpui::{App, AsyncApp, Context, Entity, Task};
 use http_client::{CustomHeaders, HttpClient};
 use language_model::util::parse_tool_arguments;
 use language_model::{
-    ApiKeyState, AuthenticateError, EnvVar, IconOrSvg, InlineDescription, LanguageModel,
+    ApiKeyState, AuthenticateError, EnvVar, IconOrSvg, LanguageModel,
     LanguageModelCompletionError, LanguageModelCompletionEvent, LanguageModelEffortLevel,
     LanguageModelId, LanguageModelName, LanguageModelProvider, LanguageModelProviderId,
     LanguageModelProviderName, LanguageModelProviderState, LanguageModelRequest, ApiKeyConfiguration,
     LanguageModelToolChoice, LanguageModelToolResultContent, LanguageModelToolUse, MessageContent,
-    ProviderSettingsView, RateLimiter, Role, StopReason, SubPageProviderSettings, TokenUsage,
+    ProviderSettingsView, RateLimiter, Role, StopReason, TokenUsage,
     env_var,
 };
 use nim::{
@@ -20,15 +20,12 @@ use nim::{
     stream_chat_completion, stream_model_events,
 };
 pub use settings::LlamaCppAvailableModel as AvailableModel;
-use settings::{Settings, SettingsStore, update_settings_file};
+use settings::{Settings, SettingsStore};
 use std::pin::Pin;
 use std::sync::LazyLock;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::Duration;
-use ui::{
-    ButtonLike, ButtonLink, ConfiguredApiCard, Divider, List, ListBulletItem, Tooltip, prelude::*,
-};
-use ui_input::InputField;
+use ui::prelude::*;
 use util::ResultExt;
 
 use crate::AllLanguageModelSettings;
