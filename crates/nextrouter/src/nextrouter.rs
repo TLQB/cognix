@@ -261,10 +261,14 @@ pub struct FunctionChunk {
     pub arguments: Option<String>,
 }
 
-pub async fn fetch_models(client: &dyn HttpClient) -> Result<Vec<Model>> {
+pub async fn fetch_models(client: &dyn HttpClient, api_key: Option<&str>,
+) -> Result<Vec<Model>> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri(NEXTROUTER_MODELS_URL)
+        .when_some(api_key, |builder, api_key| {
+            builder.header("Authorization", format!("Bearer {api_key}"))
+        })
         .body(AsyncBody::empty())?;
 
     let mut response = client.send(request).await?;
