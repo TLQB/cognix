@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Registry listing TokenRouter models (OpenAI-style `/models` payload).
-pub const TOKENROUTER_MODELS_URL: &str = "https://raw.githubusercontent.com/izaart95-jpg/cognix/refs/heads/main/tokenrouter_models";
+pub const TOKENROUTER_MODELS_URL: &str = "https://raw.githubusercontent.com/TLQB/cognix/refs/heads/main/tokenrouter_models";
 pub const TOKENROUTER_API_URL: &str = "https://api.tokenrouter.com/v1";
 
 const DEFAULT_CONTEXT_LENGTH: u64 = 131_072;
@@ -380,6 +380,36 @@ mod tests {
         let delta = &event.choices[0].delta;
         assert_eq!(delta.reasoning_content.as_deref(), Some("thinking..."));
         assert_eq!(delta.tool_calls.as_ref().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn parses_glm_reasoning_chunk_without_content_field() {
+        // Real wire payload from `z-ai/glm-5.3-free`: reasoning chunks omit
+        // `content` entirely instead of sending `"content": null`.
+        let line = r#"{"id":"x","object":"chat.completion.chunk","created":1,"model":"glm-5.3","choices":[{"index":0,"delta":{"reasoning_content":"The"},"logprobs":null,"finish_reason":null,"matched_stop":null}]}"#;
+        let result: ResponseStreamResult = serde_json::from_str(line).unwrap();
+        match result {
+            ResponseStreamResult::Ok(event) => {
+                let delta = &event.choices[0].delta;
+                assert_eq!(delta.content, None);
+                assert_eq!(delta.reasoning_content.as_deref(), Some("The"));
+            }
+            ResponseStreamResult::Err { error } => panic!("unexpected error: {}", error.message),
+        }
+    }
+
+    #[test]
+    fn parses_glm_usage_only_chunk_with_empty_choices() {
+        // Final usage chunk carries no choices at all.
+        let line = r#"{"id":"x","object":"chat.completion.chunk","created":1,"model":"glm-5.3","choices":[],"usage":{"prompt_tokens":157,"completion_tokens":31,"total_tokens":188,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":19}}}"#;
+        let result: ResponseStreamResult = serde_json::from_str(line).unwrap();
+        match result {
+            ResponseStreamResult::Ok(event) => {
+                assert!(event.choices.is_empty());
+                assert_eq!(event.usage.as_ref().unwrap().total_tokens, 188);
+            }
+            ResponseStreamResult::Err { error } => panic!("unexpected error: {}", error.message),
+        }
     }
 
     #[test]
