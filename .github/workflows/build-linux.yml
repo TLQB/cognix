@@ -104,7 +104,7 @@ jobs:
             echo "❌ ERROR: Binary not found at $BINARY"
             exit 1
           fi
-          GLIBC_REQ=$(strings "$BINARY" | grep -oP 'GLIBC_\d+\.\d+(\.\d+)?' | sort -V | tail -1)
+          GLIBC_REQ=$(strings "$BINARY" | grep -oP 'GLIBC_\d+\.\d+(\.\d+)?' | sed 's/GLIBC_//' | sort -V | tail -1)
           echo "Required GLIBC: $GLIBC_REQ"
           GLIBC_SYS=$(ldd --version 2>&1 | head -1 | awk '{print $NF}')
           echo "System GLIBC: $GLIBC_SYS"
