@@ -1,0 +1,57 @@
+version: 2.1
+
+jobs:
+  build-linux:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large  # 4 CPU, 8GB RAM
+    timeout: 60m
+    
+    steps:
+      - checkout
+      
+      - run:
+          name: Install Linux dependencies
+          command: ./script/linux
+      
+      - restore_cache:
+          keys:
+            - rust-cache-v1-{{ checksum "Cargo.lock" }}
+            - rust-cache-v1-
+      
+      - run:
+          name: System Info
+          command: |
+            echo "=== System Info ==="
+            free -h
+            df -h /
+            nproc
+            echo "=================="
+      
+      - run:
+          name: Build
+          command: cargo build --release -p zed
+          no_output_timeout: 30m
+      
+      - save_cache:
+          key: rust-cache-v1-{{ checksum "Cargo.lock" }}
+          paths:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+            - target
+      
+      - run:
+          name: Strip binary
+          command: |
+            strip target/release/zed
+            ls -lah target/release/zed
+      
+      - store_artifacts:
+          path: target/release/zed
+          destination: cognix-linux-x86_64
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-linux
