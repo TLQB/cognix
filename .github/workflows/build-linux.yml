@@ -24,6 +24,22 @@ jobs:
           apt-get update
           apt-get install -y curl git ca-certificates gnupg lsb-release sudo
 
+      - name: Verify Ubuntu 20.04 environment
+        run: |
+          echo "=== Environment Verification ==="
+          OS=$(grep PRETTY_NAME /etc/os-release)
+          echo "OS: $OS"
+          if echo "$OS" | grep -q "20.04"; then
+            echo "✅ Ubuntu 20.04 confirmed"
+          else
+            echo "❌ ERROR: Not Ubuntu 20.04! Build will be incompatible."
+            echo "   Current: $OS"
+            exit 1
+          fi
+          GLIBC_VER=$(ldd --version 2>&1 | head -1 | awk '{print $NF}')
+          echo "GLIBC: $GLIBC_VER"
+          echo "================================="
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -32,30 +48,50 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           ./script/linux
 
+      - name: Verify build tools
+        run: |
+          echo "=== Build Tools ==="
+          rustc --version
+          cargo --version
+          clang --version | head -1
+          lld --version | head -1
+          echo "GLIBC: $(ldd --version 2>&1 | head -1)"
+          echo "==================="
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "cognix-linux-v3"
+          prefix-key: "cognix-linux-docker-2004"
           workspaces: "."
-          shared-key: "linux-release-docker"
-
-      - name: System Info
-        run: |
-          echo "=== System Info ==="
-          echo "OS: $(cat /etc/os-release | grep PRETTY_NAME)"
-          echo "GLIBC: $(ldd --version 2>&1 | head -1)"
-          free -h
-          df -h /
-          nproc
-          rustc --version
-          cargo --version
-          echo "=================="
+          shared-key: "linux-release-2004"
 
       - name: Build
         run: |
           export CARGO_BUILD_JOBS=4
           cargo build --release -p zed
         timeout-minutes: 240
+
+      - name: Verify GLIBC compatibility
+        run: |
+          echo "=== GLIBC Verification ==="
+          BINARY="target/release/zed"
+          if [ ! -f "$BINARY" ]; then
+            echo "❌ ERROR: Binary not found at $BINARY"
+            exit 1
+          fi
+          GLIBC_REQ=$(strings "$BINARY" | grep -oP 'GLIBC_\d+\.\d+(\.\d+)?' | sort -V | tail -1)
+          echo "Required GLIBC: $GLIBC_REQ"
+          GLIBC_SYS=$(ldd --version 2>&1 | head -1 | awk '{print $NF}')
+          echo "System GLIBC: $GLIBC_SYS"
+          if [ "$(printf '%s\n' "$GLIBC_REQ" "$GLIBC_SYS" | sort -V | tail -1)" = "$GLIBC_SYS" ]; then
+            echo "✅ Binary GLIBC requirement ($GLIBC_REQ) <= System GLIBC ($GLIBC_SYS)"
+            echo "✅ Binary WILL run on Ubuntu 20.04+"
+          else
+            echo "❌ ERROR: Binary requires GLIBC $GLIBC_REQ but system has $GLIBC_SYS"
+            echo "❌ Binary will NOT run on Ubuntu 20.04!"
+            exit 1
+          fi
+          echo "==========================="
 
       - name: Strip binary
         run: |
