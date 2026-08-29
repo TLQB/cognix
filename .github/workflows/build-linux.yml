@@ -18,6 +18,8 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
       NEEDRESTART_MODE: l
       HOME: /root
+      CC: clang-18
+      CXX: clang++-18
 
     steps:
       - name: Install basic tools
@@ -57,25 +59,28 @@ jobs:
           source "$HOME/.cargo/env" 2>/dev/null || export PATH="/root/.cargo/bin:$PATH"
           echo "=== Build Tools ==="
           echo "HOME=$HOME"
-          echo "PATH=$PATH"
           rustc --version
           cargo --version
-          clang --version | head -1
-          lld --version | head -1
+          clang-18 --version | head -1
+          lld-18 --version | head -1
+          echo "CC=$CC"
+          echo "CXX=$CXX"
           echo "GLIBC: $(ldd --version 2>&1 | head -1)"
           echo "==================="
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "cognix-linux-docker-2004-v2"
+          prefix-key: "cognix-linux-docker-2004-v3"
           workspaces: "."
-          shared-key: "linux-release-2004-v2"
+          shared-key: "linux-release-2004-v3"
 
       - name: Build
         run: |
           export HOME=/root
           source "$HOME/.cargo/env" 2>/dev/null || export PATH="/root/.cargo/bin:$PATH"
+          export CC=clang-18
+          export CXX=clang++-18
           export CARGO_BUILD_JOBS=4
           cargo build --release -p zed
         timeout-minutes: 240
