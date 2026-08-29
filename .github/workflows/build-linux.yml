@@ -53,6 +53,17 @@ jobs:
           ./script/linux
           echo 'source "$HOME/.cargo/env"' >> /root/.bashrc
 
+      - name: Install newer CMake
+        run: |
+          # wasmtime requires CMake >= 3.18, Ubuntu 20.04 only has 3.16
+          apt-get install -y wget
+          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add -
+          apt-get install -y software-properties-common
+          apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+          apt-get update
+          apt-get install -y cmake
+          cmake --version
+
       - name: Verify build tools
         run: |
           export HOME=/root
