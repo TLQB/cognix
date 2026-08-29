@@ -23,7 +23,13 @@ jobs:
           workspaces: "."
 
       - name: Build
-        run: cargo build --release -p zed
+        run: |
+          echo "=== System Info ==="
+          free -h
+          df -h /
+          nproc
+          echo "=================="
+          cargo build --release -p zed
 
       - name: Strip binary
         run: |
