@@ -60,3 +60,13 @@ crates/docs_preprocessor/actions.json
 .nixos-test-history
 
 .local*
+
+# Local build scripts (use GitHub Actions instead)
+build.sh
+build_background.sh
+build_now.sh
+build_pull.sh
+build_v2.sh
+start_build.sh
+llvm.sh
+build_utility.py
