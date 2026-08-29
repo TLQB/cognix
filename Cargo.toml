@@ -1004,6 +1004,12 @@ notify = { git = "https://github.com/zed-industries/notify", rev = "0890bbb8ca40
 notify-types = { git = "https://github.com/zed-industries/notify", rev = "0890bbb8ca40a4b5d1f67031698dd7918b37d991" }
 webrtc-sys = { git = "https://github.com/zed-industries/livekit-rust-sdks", rev = "0a1c519cfce9b365229026b55de9b9dbdb6fed3c" }
 
+[patch."https://github.com/zed-industries/xim-rs.git"]
+# Local fix for compound-text decoding: the upstream decoder throws away every
+# byte after the ESC % @ "return to initial state" escape, which silently eats
+# the ASCII tail of XIM commits (e.g. the "ng" in Vietnamese "ti\u{1ebf}ng").
+xim-ctext = { path = "vendor/xim-ctext" }
+
 [profile.dev]
 split-debuginfo = "unpacked"
 incremental = true
