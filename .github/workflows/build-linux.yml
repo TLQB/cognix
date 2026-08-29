@@ -24,8 +24,20 @@ jobs:
     steps:
       - name: Install basic tools
         run: |
-          apt-get update
-          apt-get install -y curl git ca-certificates gnupg lsb-release sudo
+          # Mirrors occasionally reset the connection; retry instead of
+          # failing the whole build.
+          for i in 1 2 3; do
+            apt-get update && break
+            if [ "$i" = 3 ]; then echo "ERROR: apt-get update failed"; exit 1; fi
+            echo "apt-get update attempt $i failed, retrying in 15s"
+            sleep 15
+          done
+          for i in 1 2 3; do
+            apt-get install -y curl git ca-certificates gnupg lsb-release sudo && break
+            if [ "$i" = 3 ]; then echo "ERROR: apt-get install failed"; exit 1; fi
+            echo "apt-get install attempt $i failed, retrying in 15s"
+            sleep 15
+          done
 
       - name: Verify Ubuntu 20.04 environment
         run: |
@@ -46,18 +58,59 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Must run before script/linux, whose `finalize` curls rustup with no
+      # retries, and before the cache step, which shells out to `rustc -vV` and
+      # silently disables itself when rustc is not on PATH.
+      - name: Install Rust toolchain
+        run: |
+          if [ ! -x /root/.cargo/bin/rustup ]; then
+            for i in 1 2 3 4 5; do
+              curl --proto '=https' --tlsv1.2 -sSf \
+                --connect-timeout 30 --max-time 180 \
+                --retry 5 --retry-delay 5 --retry-connrefused \
+                https://sh.rustup.rs -o /tmp/rustup-init.sh && break
+              echo "rustup download attempt $i failed, retrying in 15s"
+              rm -f /tmp/rustup-init.sh
+              sleep 15
+            done
+            if [ ! -s /tmp/rustup-init.sh ]; then
+              echo "ERROR: could not download the rustup installer"
+              exit 1
+            fi
+            # `none` avoids installing an unused `stable`; the cargo/rustc
+            # proxies pull the toolchain pinned in rust-toolchain.toml instead.
+            sh /tmp/rustup-init.sh -y --no-modify-path --profile minimal \
+              --default-toolchain none
+          fi
+          # Put cargo on PATH for every later step, the cache action included.
+          echo "/root/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="/root/.cargo/bin:$PATH"
+          rustc -vV
+          cargo --version
+
       - name: Install Linux dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          export HOME=/root
-          ./script/linux
+          for i in 1 2 3; do
+            ./script/linux && break
+            if [ "$i" = 3 ]; then echo "ERROR: script/linux failed"; exit 1; fi
+            echo "script/linux attempt $i failed, retrying in 20s"
+            sleep 20
+          done
           echo 'source "$HOME/.cargo/env"' >> /root/.bashrc
 
       - name: Install newer CMake
         run: |
           # wasmtime requires CMake >= 3.18, Ubuntu 20.04 only has 3.16
           apt-get install -y wget
-          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add -
+          for i in 1 2 3; do
+            wget -qO /tmp/kitware.asc --tries=3 --timeout=30 \
+              https://apt.kitware.com/keys/kitware-archive-latest.asc && break
+            if [ "$i" = 3 ]; then echo "ERROR: kitware key download failed"; exit 1; fi
+            echo "kitware key download attempt $i failed, retrying in 15s"
+            sleep 15
+          done
+          apt-key add /tmp/kitware.asc
           apt-get install -y software-properties-common
           apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           apt-get update
@@ -66,8 +119,6 @@ jobs:
 
       - name: Verify build tools
         run: |
-          export HOME=/root
-          source "$HOME/.cargo/env" 2>/dev/null || export PATH="/root/.cargo/bin:$PATH"
           echo "=== Build Tools ==="
           echo "HOME=$HOME"
           rustc --version
@@ -85,13 +136,10 @@ jobs:
           prefix-key: "cognix-linux-docker-2004-v3"
           workspaces: "."
           shared-key: "linux-release-2004-v3"
+          cache-on-failure: true
 
       - name: Build
         run: |
-          export HOME=/root
-          source "$HOME/.cargo/env" 2>/dev/null || export PATH="/root/.cargo/bin:$PATH"
-          export CC=clang-18
-          export CXX=clang++-18
           export CARGO_BUILD_JOBS=4
           cargo build --release -p zed
         timeout-minutes: 240
