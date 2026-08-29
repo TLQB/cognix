@@ -6,7 +6,33 @@
 {
   "language_models": {
    "cognix.glm": {
-      "api_url": "https://glm.cognix.sryze.cc"
+      "api_url": "https://api.lelouch.indevs.in",
+      "available_models": [
+        {
+          "name": "glm-5.3-flash",
+          "display_name": "GLM 5.3 Flash",
+          "max_tokens": 1000000,
+          "supports_tools": true,
+          "supports_images": false,
+          "supports_thinking": true
+        },
+        {
+          "name": "glm-5.3",
+          "display_name": "GLM 5.3",
+          "max_tokens": 1000000,
+          "supports_tools": true,
+          "supports_images": false,
+          "supports_thinking": true
+        },
+        {
+          "name": "glm-5.2",
+          "display_name": "GLM 5.2",
+          "max_tokens": 1000000,
+          "supports_tools": true,
+          "supports_images": false,
+          "supports_thinking": true
+        }
+      ]
    },
    "nim": {
       "api_url": "https://integrate.api.nvidia.com",

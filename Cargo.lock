@@ -7354,6 +7354,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "glm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
+ "url",
+]
+
+[[package]]
 name = "glob"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9378,6 +9391,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "justwoker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "keymap_editor"
 version = "0.1.0"
 dependencies = [
@@ -9429,6 +9454,18 @@ name = "khronos_api"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
+
+[[package]]
+name = "kilo"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "kqueue"
@@ -9671,10 +9708,13 @@ dependencies = [
  "feature_flags",
  "fs",
  "futures 0.3.32",
+ "glm",
  "google_ai",
  "gpui",
  "gpui_tokio",
  "http_client",
+ "justwoker",
+ "kilo",
  "language",
  "language_model",
  "language_models_cloud",
@@ -9683,12 +9723,15 @@ dependencies = [
  "log",
  "menu",
  "mistral",
+ "nextrouter",
+ "nim",
  "ollama",
  "open_ai",
  "open_router",
  "openai_subscribed",
  "opencode",
  "parking_lot",
+ "pretty_assertions",
  "rand 0.9.4",
  "release_channel",
  "schemars 1.0.4",
@@ -9697,11 +9740,13 @@ dependencies = [
  "settings",
  "sha2",
  "strum 0.28.0",
+ "tokenrouter",
  "tokio",
  "ui",
  "ui_input",
  "util",
  "x_ai",
+ "zen",
 ]
 
 [[package]]
@@ -11287,6 +11332,31 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
+
+[[package]]
+name = "nextrouter"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "nim"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
+ "url",
+]
 
 [[package]]
 name = "nix"
@@ -18600,6 +18670,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokenrouter"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "tokio"
 version = "1.52.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -23120,6 +23202,19 @@ name = "zed_test_extension"
 version = "0.1.0"
 dependencies = [
  "zed_extension_api 0.8.0",
+]
+
+[[package]]
+name = "zen"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures 0.3.32",
+ "http_client",
+ "rand 0.9.4",
+ "schemars 1.0.4",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
