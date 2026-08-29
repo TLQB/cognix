@@ -17,6 +17,7 @@ jobs:
     env:
       DEBIAN_FRONTEND: noninteractive
       NEEDRESTART_MODE: l
+      HOME: /root
 
     steps:
       - name: Install basic tools
@@ -27,13 +28,13 @@ jobs:
       - name: Verify Ubuntu 20.04 environment
         run: |
           echo "=== Environment Verification ==="
+          echo "HOME=$HOME"
           OS=$(grep PRETTY_NAME /etc/os-release)
           echo "OS: $OS"
           if echo "$OS" | grep -q "20.04"; then
             echo "✅ Ubuntu 20.04 confirmed"
           else
-            echo "❌ ERROR: Not Ubuntu 20.04! Build will be incompatible."
-            echo "   Current: $OS"
+            echo "❌ ERROR: Not Ubuntu 20.04!"
             exit 1
           fi
           GLIBC_VER=$(ldd --version 2>&1 | head -1 | awk '{print $NF}')
@@ -46,11 +47,17 @@ jobs:
       - name: Install Linux dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
+          export HOME=/root
           ./script/linux
+          echo 'source "$HOME/.cargo/env"' >> /root/.bashrc
 
       - name: Verify build tools
         run: |
+          export HOME=/root
+          source "$HOME/.cargo/env" 2>/dev/null || export PATH="/root/.cargo/bin:$PATH"
           echo "=== Build Tools ==="
+          echo "HOME=$HOME"
+          echo "PATH=$PATH"
           rustc --version
           cargo --version
           clang --version | head -1
@@ -61,12 +68,14 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "cognix-linux-docker-2004"
+          prefix-key: "cognix-linux-docker-2004-v2"
           workspaces: "."
-          shared-key: "linux-release-2004"
+          shared-key: "linux-release-2004-v2"
 
       - name: Build
         run: |
+          export HOME=/root
+          source "$HOME/.cargo/env" 2>/dev/null || export PATH="/root/.cargo/bin:$PATH"
           export CARGO_BUILD_JOBS=4
           cargo build --release -p zed
         timeout-minutes: 240
