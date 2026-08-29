@@ -7,29 +7,43 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest  # 4 vCPUs, 16 GB RAM
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     
+    container:
+      image: ubuntu:20.04
+      options: --user root
+    
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      NEEDRESTART_MODE: l
+
     steps:
+      - name: Install basic tools
+        run: |
+          apt-get update
+          apt-get install -y curl git ca-certificates gnupg lsb-release sudo
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install Linux dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          export NEEDRESTART_MODE=l
           ./script/linux
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "cognix-linux-v2"
+          prefix-key: "cognix-linux-v3"
           workspaces: "."
-          shared-key: "linux-release"
+          shared-key: "linux-release-docker"
 
       - name: System Info
         run: |
           echo "=== System Info ==="
+          echo "OS: $(cat /etc/os-release | grep PRETTY_NAME)"
+          echo "GLIBC: $(ldd --version 2>&1 | head -1)"
           free -h
           df -h /
           nproc
@@ -41,7 +55,7 @@ jobs:
         run: |
           export CARGO_BUILD_JOBS=4
           cargo build --release -p zed
-        timeout-minutes: 180
+        timeout-minutes: 240
 
       - name: Strip binary
         run: |
