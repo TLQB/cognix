@@ -2,8 +2,8 @@ version: 2.1
 
 jobs:
   build-linux:
-    machine:
-      image: ubuntu-2204:current
+    docker:
+      - image: rust:1.75-bullseye
     resource_class: large  # 4 CPU, 8GB RAM
     
     steps:
@@ -12,14 +12,17 @@ jobs:
       - run:
           name: Install Linux dependencies
           command: |
-            export DEBIAN_FRONTEND=noninteractive
-            export NEEDRESTART_MODE=l
-            ./script/linux
-      
-      - restore_cache:
-          keys:
-            - rust-cache-v1-{{ checksum "Cargo.lock" }}
-            - rust-cache-v1-
+            apt-get update
+            apt-get install -y --no-install-recommends \
+              gcc g++ make cmake clang lld llvm \
+              libasound2-dev libfontconfig-dev libgit2-dev \
+              libglib2.0-dev libssl-dev libva-dev \
+              libvulkan-dev libwayland-dev libx11-xcb-dev \
+              libxkbcommon-x11-dev libzstd-dev \
+              jq curl gettext-base elfutils \
+              libsqlite3-dev musl-tools musl-dev \
+              pkg-config
+          no_output_timeout: 10m
       
       - run:
           name: System Info
@@ -28,7 +31,14 @@ jobs:
             free -h
             df -h /
             nproc
+            rustc --version
+            cargo --version
             echo "=================="
+      
+      - restore_cache:
+          keys:
+            - rust-cache-v1-{{ checksum "Cargo.lock" }}
+            - rust-cache-v1-
       
       - run:
           name: Build
