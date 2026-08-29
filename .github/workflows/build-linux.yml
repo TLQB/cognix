@@ -7,29 +7,41 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 4 vCPUs, 16 GB RAM
     timeout-minutes: 360
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install Linux dependencies
-        run: ./script/linux
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          export NEEDRESTART_MODE=l
+          ./script/linux
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "cognix-linux"
+          prefix-key: "cognix-linux-v2"
           workspaces: "."
+          shared-key: "linux-release"
 
-      - name: Build
+      - name: System Info
         run: |
           echo "=== System Info ==="
           free -h
           df -h /
           nproc
+          rustc --version
+          cargo --version
           echo "=================="
+
+      - name: Build
+        run: |
+          export CARGO_BUILD_JOBS=4
           cargo build --release -p zed
+        timeout-minutes: 180
 
       - name: Strip binary
         run: |
