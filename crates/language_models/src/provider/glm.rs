@@ -52,7 +52,18 @@ const ASSUMED_UNLOADED_CONTEXT: u64 = 131_072;
 //   (model_name_match, &[(effort_value, display_label), ...], default_effort_value)
 // ====================================================================
 const REASONING_EFFORT_MODELS: &[(&str, &[(&str, &str)], &str)] = &[
+    ("glm-5.3-flash", &[("low", "Low"), ("high", "High")], "high"),
+    ("glm-5.3", &[("low", "Low"), ("high", "High"), ("max", "Max")], "high"),
     ("glm-5.2", &[("high", "High"), ("max", "Max")], "high"),
+];
+
+/// Built-in GLM models always shown in the provider's model list, even when
+/// auto-discovery doesn't report them. Auto-discovered entries and user-configured
+/// available_models override these defaults.
+const DEFAULT_MODELS: &[(&str, &str, u64)] = &[
+    ("glm-5.3-flash", "GLM-5.3 Flash", 131_072),
+    ("glm-5.3", "GLM-5.3", 131_072),
+    ("glm-5.2", "GLM-5.2", 131_072),
 ];
 
 fn reasoning_effort_config(model_name: &str) -> Option<&'static (&'static str, &'static [(&'static str, &'static str)], &'static str)> {
@@ -378,6 +389,20 @@ fn compute_effective_models(
             }
             models.insert(model.name.clone(), model);
         }
+    }
+    // Always include built-in GLM models so they appear in the picker even
+    // when auto-discovery hasn't reported them. Entries already in the map
+    // (from auto-discover) and user-configured models (merged next) take
+    // precedence over these defaults.
+    for (name, display_name, max_tokens) in DEFAULT_MODELS {
+        models.entry((*name).to_string()).or_insert(glm::Model::new(
+            name,
+            Some(display_name),
+            Some(*max_tokens),
+            true,
+            false,
+            true,
+        ));
     }
     merge_settings_into_models(
         &mut models,

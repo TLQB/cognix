@@ -51,7 +51,7 @@ const DEFAULT_MAX_TOKENS: u64 = 131_072;
 fn hardcoded_models() -> Vec<tokenrouter::Model> {
     vec![
         tokenrouter::Model::new(
-            "qwen/qwen3.8-max-free",
+            "zai/glm-5.3-free",
             None,
             Some(DEFAULT_MAX_TOKENS),
             true,

@@ -2,10 +2,10 @@
   "object": "list",
   "data": [
     {
-      "id": "qwen/qwen3.8-max-free",
+      "id": "zai/glm-5.3-free",
       "object": "model",
       "created": 735790403,
-      "owned_by": "qwen-ai",
+      "owned_by": "zai",
       "reasoning_efforts": ["low", "medium", "xhigh"],
       "default_reasoning_effort": "medium"
     }
