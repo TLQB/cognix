@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Installs a desktop entry for a locally-built Cognix binary into the user's
+# XDG data directory, so Cognix appears in the application launcher and can be
+# pinned to the dock.
+#
+# This is for developers running a binary they built or downloaded from CI
+# (typically at ~/.local/bin/cognix). Official bundles get their .desktop file
+# from script/bundle-linux instead.
+#
+# Usage: script/install-desktop-entry-linux [path-to-binary]
+
+set -euo pipefail
+
+BINARY="${1:-$HOME/.local/bin/cognix}"
+
+if [[ ! -x "$BINARY" ]]; then
+  echo "error: no executable at $BINARY" >&2
+  echo "Build or install Cognix first, or pass the binary path as an argument." >&2
+  exit 1
+fi
+
+BINARY="$(cd "$(dirname "$BINARY")" && pwd)/$(basename "$BINARY")"
+
+APP_ID="dev.cognix.Cognix-Dev"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}"
+DESKTOP_DIR="$DATA_DIR/applications"
+ICON_DIR="$DATA_DIR/icons/hicolor"
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+mkdir -p "$DESKTOP_DIR"
+
+# The 1024px asset is the highest resolution we ship; hicolor picks the best
+# match per context, so installing both sizes avoids upscaling in the dock.
+for size in 512 1024; do
+  case "$size" in
+    512) src="$REPO_ROOT/crates/zed/resources/app-icon-dev.png" ;;
+    1024) src="$REPO_ROOT/crates/zed/resources/app-icon-dev@2x.png" ;;
+  esac
+  if [[ -f "$src" ]]; then
+    mkdir -p "$ICON_DIR/${size}x${size}/apps"
+    cp "$src" "$ICON_DIR/${size}x${size}/apps/cognix.png"
+  fi
+done
+
+# StartupWMClass must match the WM_CLASS the app actually sets, otherwise the
+# window shows up as a separate, unlabelled entry in the dock instead of being
+# grouped under this launcher.
+#
+# MimeType deliberately omits inode/directory: on some desktops that makes the
+# editor the default file browser. See the note in
+# crates/zed/resources/zed.desktop.in.
+#
+# No desktop actions are defined: `--new` is a flag of the `cli` binary, not of
+# the editor binary, which rejects it.
+cat > "$DESKTOP_DIR/$APP_ID.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Cognix Dev
+GenericName=Text Editor
+Comment=A high-performance, multiplayer code editor.
+TryExec=$BINARY
+StartupNotify=true
+StartupWMClass=dev.zed.Zed-Dev
+Exec=$BINARY %U
+Icon=cognix
+Categories=Utility;TextEditor;Development;IDE;
+Keywords=cognix;zed;editor;
+MimeType=text/plain;application/x-zerosize;
+EOF
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+  gtk-update-icon-cache --force --quiet "$ICON_DIR" 2>/dev/null || true
+fi
+
+echo "Installed $DESKTOP_DIR/$APP_ID.desktop -> $BINARY"
