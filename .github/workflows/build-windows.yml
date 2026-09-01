@@ -13,8 +13,6 @@ jobs:
     env:
       CARGO_BUILD_JOBS: 4
       CARGO_INCREMENTAL: 0
-      CC: clang
-      CXX: clang++
 
     steps:
       - name: Checkout
@@ -36,35 +34,8 @@ jobs:
           rustc -vV
           cargo --version
 
-      - name: Install Clang/LLVM/LLD
-        shell: pwsh
-        run: |
-          $llvmVersion = "18.1.8"
-          $llvmUrl = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$llvmVersion/LLVM-$llvmVersion-win64.exe"
-          $installerPath = "$env:TEMP\LLVM-installer.exe"
-
-          $downloaded = $false
-          for ($i = 1; $i -le 5; $i++) {
-              curl.exe -L --connect-timeout 30 --max-time 600 --retry 5 --retry-delay 5 `
-                  -o "$installerPath" "$llvmUrl"
-              if ($LASTEXITCODE -eq 0) {
-                  $downloaded = $true
-                  break
-              }
-              Write-Host "LLVM download attempt $i failed, retrying in 15s..."
-              Start-Sleep -Seconds 15
-          }
-          if (-not $downloaded) {
-              Write-Host "ERROR: Failed to download LLVM after 5 attempts"
-              exit 1
-          }
-
-          $llvmInstallPath = "C:\LLVM"
-          Start-Process -FilePath "$installerPath" -ArgumentList "/S","/D=$llvmInstallPath" -Wait
-          Remove-Item $installerPath
-
-          $env:PATH = "$llvmInstallPath\bin;$env:PATH"
-          echo "$llvmInstallPath\bin" >> $env:GITHUB_PATH
+      - name: Set up MSVC Developer Environment
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install CMake
         shell: pwsh
@@ -114,10 +85,10 @@ jobs:
           Write-Host "=== Build Tools ==="
           rustc --version
           cargo --version
-          clang --version | Select-Object -First 1
+          cl 2>&1 | Select-Object -First 1
           cmake --version | Select-Object -First 1
-          Write-Host "CC=$env:CC"
-          Write-Host "CXX=$env:CXX"
+          Write-Host "INCLUDE=$env:INCLUDE"
+          Write-Host "LIB=$env:LIB"
           Write-Host "==================="
 
       - name: Rust cache
