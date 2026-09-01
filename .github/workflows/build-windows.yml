@@ -1,0 +1,167 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    env:
+      CARGO_BUILD_JOBS: 4
+      CARGO_INCREMENTAL: 0
+      CC: clang
+      CXX: clang++
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        shell: pwsh
+        run: |
+          $rustupInstaller = "$env:TEMP\rustup-init.exe"
+          $downloaded = $false
+          for ($i = 1; $i -le 5; $i++) {
+              curl.exe -L --connect-timeout 30 --max-time 300 --retry 5 --retry-delay 5 `
+                  -o "$rustupInstaller" "https://win.rustup.rs/rustup-init.exe"
+              if ($LASTEXITCODE -eq 0 -and (Test-Path "$rustupInstaller")) {
+                  $downloaded = $true
+                  break
+              }
+              Write-Host "rustup download attempt $i failed, retrying in 15s..."
+              Start-Sleep -Seconds 15
+          }
+          if (-not $downloaded) {
+              Write-Host "ERROR: Failed to download rustup after 5 attempts"
+              exit 1
+          }
+          & $rustupInstaller -y --no-modify-path --profile minimal --default-toolchain none
+          Remove-Item $rustupInstaller
+
+          $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
+          echo "$env:USERPROFILE\.cargo\bin" >> $env:GITHUB_PATH
+          rustc -vV
+          cargo --version
+
+      - name: Install Clang/LLVM/LLD
+        shell: pwsh
+        run: |
+          $llvmVersion = "18.1.8"
+          $llvmUrl = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$llvmVersion/LLVM-$llvmVersion-win64.exe"
+          $installerPath = "$env:TEMP\LLVM-installer.exe"
+
+          $downloaded = $false
+          for ($i = 1; $i -le 5; $i++) {
+              curl.exe -L --connect-timeout 30 --max-time 600 --retry 5 --retry-delay 5 `
+                  -o "$installerPath" "$llvmUrl"
+              if ($LASTEXITCODE -eq 0) {
+                  $downloaded = $true
+                  break
+              }
+              Write-Host "LLVM download attempt $i failed, retrying in 15s..."
+              Start-Sleep -Seconds 15
+          }
+          if (-not $downloaded) {
+              Write-Host "ERROR: Failed to download LLVM after 5 attempts"
+              exit 1
+          }
+
+          $llvmInstallPath = "C:\LLVM"
+          Start-Process -FilePath "$installerPath" -ArgumentList "/S","/D=$llvmInstallPath" -Wait
+          Remove-Item $installerPath
+
+          $env:PATH = "$llvmInstallPath\bin;$env:PATH"
+          echo "$llvmInstallPath\bin" >> $env:GITHUB_PATH
+
+      - name: Install CMake
+        shell: pwsh
+        run: |
+          $cmakeVersion = "3.30.5"
+          $cmakeUrl = "https://github.com/Kitware/CMake/releases/download/v$cmakeVersion/cmake-$cmakeVersion-windows-x86_64.zip"
+          $cmakeZipPath = "$env:TEMP\cmake.zip"
+          $cmakeExtractPath = "$env:TEMP\cmake"
+
+          $downloaded = $false
+          for ($i = 1; $i -le 5; $i++) {
+              curl.exe -L --connect-timeout 30 --max-time 600 --retry 5 --retry-delay 5 `
+                  -o "$cmakeZipPath" "$cmakeUrl"
+              if ($LASTEXITCODE -eq 0) {
+                  $downloaded = $true
+                  break
+              }
+              Write-Host "CMake download attempt $i failed, retrying in 15s..."
+              Start-Sleep -Seconds 15
+          }
+          if (-not $downloaded) {
+              Write-Host "ERROR: Failed to download CMake after 5 attempts"
+              exit 1
+          }
+
+          Expand-Archive -Path "$cmakeZipPath" -DestinationPath "$cmakeExtractPath" -Force
+          $cmakeBinPath = "$cmakeExtractPath\cmake-$cmakeVersion-windows-x86_64\bin"
+
+          $env:PATH = "$cmakeBinPath;$env:PATH"
+          echo "$cmakeBinPath" >> $env:GITHUB_PATH
+
+      - name: Install MinGW
+        shell: pwsh
+        run: |
+          choco install mingw -y --no-progress
+          $mingwPath = "C:\ProgramData\chocolatey\lib\mingw\tools\install\path\bin"
+          if (Test-Path $mingwPath) {
+              $env:PATH = "$mingwPath;$env:PATH"
+              echo "$mingwPath" >> $env:GITHUB_PATH
+          } else {
+              Write-Host "WARNING: MinGW path not found at expected location"
+          }
+
+      - name: Verify build tools
+        shell: pwsh
+        run: |
+          Write-Host "=== Build Tools ==="
+          rustc --version
+          cargo --version
+          clang --version | Select-Object -First 1
+          cmake --version | Select-Object -First 1
+          Write-Host "CC=$env:CC"
+          Write-Host "CXX=$env:CXX"
+          Write-Host "==================="
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "cognix-windows-v2"
+          workspaces: "."
+          shared-key: "windows-release-v2"
+          cache-on-failure: true
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cargo build --release -p zed --target x86_64-pc-windows-msvc
+        timeout-minutes: 240
+
+      - name: Verify binary exists
+        shell: pwsh
+        run: |
+          $binary = "target/x86_64-pc-windows-msvc/release/zed.exe"
+          if (Test-Path $binary) {
+              Write-Host "Binary found: $binary"
+              $size = (Get-Item $binary).Length / 1MB
+              Write-Host "Size: $([math]::Round($size, 2)) MB"
+          } else {
+              Write-Host "ERROR: Binary not found at $binary"
+              exit 1
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cognix-windows-x86_64
+          path: target/x86_64-pc-windows-msvc/release/zed.exe
+          compression-level: 0
+          retention-days: 14
