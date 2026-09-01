@@ -20,30 +20,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # windows-latest runners ship with rustup pre-installed. We just need
+      # to trigger installation of the toolchain pinned in rust-toolchain.toml.
       - name: Install Rust toolchain
         shell: pwsh
         run: |
-          $rustupInstaller = "$env:TEMP\rustup-init.exe"
-          $downloaded = $false
-          for ($i = 1; $i -le 5; $i++) {
-              curl.exe -L --connect-timeout 30 --max-time 300 --retry 5 --retry-delay 5 `
-                  -o "$rustupInstaller" "https://win.rustup.rs/rustup-init.exe"
-              if ($LASTEXITCODE -eq 0 -and (Test-Path "$rustupInstaller")) {
-                  $downloaded = $true
-                  break
-              }
-              Write-Host "rustup download attempt $i failed, retrying in 15s..."
-              Start-Sleep -Seconds 15
+          # Ensure cargo bin dir is on PATH for subsequent steps
+          $cargoBin = "$env:USERPROFILE\.cargo\bin"
+          if (-not ($env:PATH -split ';' -contains $cargoBin)) {
+              $env:PATH = "$cargoBin;$env:PATH"
+              echo "$cargoBin" >> $env:GITHUB_PATH
           }
-          if (-not $downloaded) {
-              Write-Host "ERROR: Failed to download rustup after 5 attempts"
-              exit 1
-          }
-          & $rustupInstaller -y --no-modify-path --profile minimal --default-toolchain none
-          Remove-Item $rustupInstaller
-
-          $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
-          echo "$env:USERPROFILE\.cargo\bin" >> $env:GITHUB_PATH
+          # Trigger toolchain install from rust-toolchain.toml
+          rustup show
           rustc -vV
           cargo --version
 
