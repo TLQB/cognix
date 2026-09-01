@@ -118,10 +118,55 @@ jobs:
               exit 1
           }
 
+      - name: Download ConPTY (OpenConsole + conpty.dll)
+        shell: pwsh
+        run: |
+          # Microsoft Terminal v1.23.10353.0 — ConPTY backend for integrated terminal.
+          # Without these files, zed.exe cannot spawn a shell on Windows.
+          $termVersion = "1.23.10353.0"
+          $termUrl = "https://github.com/microsoft/terminal/releases/download/v$termVersion/Microsoft.WindowsTerminal_$termVersion.x64.zip"
+          $termZipPath = "$env:TEMP\terminal.zip"
+          $termExtractPath = "$env:TEMP\terminal"
+
+          $downloaded = $false
+          for ($i = 1; $i -le 5; $i++) {
+              curl.exe -L --connect-timeout 30 --max-time 600 --retry 5 --retry-delay 5 `
+                  -o "$termZipPath" "$termUrl"
+              if ($LASTEXITCODE -eq 0) {
+                  $downloaded = $true
+                  break
+              }
+              Write-Host "Terminal download attempt $i failed, retrying in 15s..."
+              Start-Sleep -Seconds 15
+          }
+          if (-not $downloaded) {
+              Write-Host "ERROR: Failed to download Microsoft Terminal after 5 attempts"
+              exit 1
+          }
+
+          Expand-Archive -Path "$termZipPath" -DestinationPath "$termExtractPath" -Force
+
+          $releaseDir = "target/x86_64-pc-windows-msvc/release"
+          $openConsole = Get-ChildItem -Path "$termExtractPath" -Recurse -Filter "OpenConsole.exe" | Select-Object -First 1
+          $conptyDll = Get-ChildItem -Path "$termExtractPath" -Recurse -Filter "conpty.dll" | Select-Object -First 1
+
+          if (-not $openConsole -or -not $conptyDll) {
+              Write-Host "ERROR: OpenConsole.exe or conpty.dll not found in Terminal package"
+              exit 1
+          }
+
+          Copy-Item $openConsole.FullName -Destination "$releaseDir\OpenConsole.exe" -Force
+          Copy-Item $conptyDll.FullName -Destination "$releaseDir\conpty.dll" -Force
+          Write-Host "Bundled OpenConsole.exe: $((Get-Item "$releaseDir\OpenConsole.exe").Length / 1KB) KB"
+          Write-Host "Bundled conpty.dll: $((Get-Item "$releaseDir\conpty.dll").Length / 1KB) KB"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cognix-windows-x86_64
-          path: target/x86_64-pc-windows-msvc/release/zed.exe
+          path: |
+            target/x86_64-pc-windows-msvc/release/zed.exe
+            target/x86_64-pc-windows-msvc/release/OpenConsole.exe
+            target/x86_64-pc-windows-msvc/release/conpty.dll
           compression-level: 0
           retention-days: 14
