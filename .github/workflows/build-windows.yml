@@ -121,44 +121,47 @@ jobs:
       - name: Download ConPTY (OpenConsole + conpty.dll)
         shell: pwsh
         run: |
-          # Microsoft Terminal v1.23.10353.0 — ConPTY backend for integrated terminal.
+          # ConPTY NuGet package from Microsoft Terminal v1.23.13503.0.
           # Without these files, zed.exe cannot spawn a shell on Windows.
-          $termVersion = "1.23.10353.0"
-          $termUrl = "https://github.com/microsoft/terminal/releases/download/v$termVersion/Microsoft.WindowsTerminal_$termVersion.x64.zip"
-          $termZipPath = "$env:TEMP\terminal.zip"
-          $termExtractPath = "$env:TEMP\terminal"
+          $termUrl = "https://github.com/microsoft/terminal/releases/download/v1.23.13503.0/Microsoft.Windows.Console.ConPTY.1.23.251216003.nupkg"
+          $nupkgPath = "$env:TEMP\conpty.nupkg"
+          $nupkgExtractPath = "$env:TEMP\conpty"
 
           $downloaded = $false
           for ($i = 1; $i -le 5; $i++) {
               curl.exe -L --connect-timeout 30 --max-time 600 --retry 5 --retry-delay 5 `
-                  -o "$termZipPath" "$termUrl"
-              if ($LASTEXITCODE -eq 0) {
+                  -o "$nupkgPath" "$termUrl"
+              if ($LASTEXITCODE -eq 0 -and (Get-Item $nupkgPath).Length -gt 10000) {
                   $downloaded = $true
                   break
               }
-              Write-Host "Terminal download attempt $i failed, retrying in 15s..."
+              Write-Host "ConPTY download attempt $i failed, retrying in 15s..."
               Start-Sleep -Seconds 15
           }
           if (-not $downloaded) {
-              Write-Host "ERROR: Failed to download Microsoft Terminal after 5 attempts"
+              Write-Host "ERROR: Failed to download ConPTY after 5 attempts"
               exit 1
           }
 
-          Expand-Archive -Path "$termZipPath" -DestinationPath "$termExtractPath" -Force
+          # .nupkg is a zip — rename and extract
+          $zipPath = "$env:TEMP\conpty.zip"
+          Copy-Item $nupkgPath $zipPath -Force
+          Expand-Archive -Path "$zipPath" -DestinationPath "$nupkgExtractPath" -Force
 
           $releaseDir = "target/x86_64-pc-windows-msvc/release"
-          $openConsole = Get-ChildItem -Path "$termExtractPath" -Recurse -Filter "OpenConsole.exe" | Select-Object -First 1
-          $conptyDll = Get-ChildItem -Path "$termExtractPath" -Recurse -Filter "conpty.dll" | Select-Object -First 1
+          # x64 runtime files
+          $openConsole = "$nupkgExtractPath\build\native\runtimes\x64\OpenConsole.exe"
+          $conptyDll = "$nupkgExtractPath\runtimes\win-x64\native\conpty.dll"
 
-          if (-not $openConsole -or -not $conptyDll) {
-              Write-Host "ERROR: OpenConsole.exe or conpty.dll not found in Terminal package"
+          if (-not (Test-Path $openConsole) -or -not (Test-Path $conptyDll)) {
+              Write-Host "ERROR: OpenConsole.exe or conpty.dll not found in ConPTY package"
               exit 1
           }
 
-          Copy-Item $openConsole.FullName -Destination "$releaseDir\OpenConsole.exe" -Force
-          Copy-Item $conptyDll.FullName -Destination "$releaseDir\conpty.dll" -Force
-          Write-Host "Bundled OpenConsole.exe: $((Get-Item "$releaseDir\OpenConsole.exe").Length / 1KB) KB"
-          Write-Host "Bundled conpty.dll: $((Get-Item "$releaseDir\conpty.dll").Length / 1KB) KB"
+          Copy-Item $openConsole -Destination "$releaseDir\OpenConsole.exe" -Force
+          Copy-Item $conptyDll -Destination "$releaseDir\conpty.dll" -Force
+          Write-Host "Bundled OpenConsole.exe: $([math]::Round((Get-Item "$releaseDir\OpenConsole.exe").Length / 1KB, 1)) KB"
+          Write-Host "Bundled conpty.dll: $([math]::Round((Get-Item "$releaseDir\conpty.dll").Length / 1KB, 1)) KB"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
