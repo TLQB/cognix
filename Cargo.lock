@@ -9746,6 +9746,7 @@ dependencies = [
  "ui_input",
  "util",
  "x_ai",
+ "zai_proxy_sidecar",
  "zen",
 ]
 
@@ -22734,6 +22735,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "zai_proxy_sidecar"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "smol",
+]
+
+[[package]]
 name = "zbus"
 version = "5.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -22998,6 +23007,7 @@ dependencies = [
  "windows 0.61.3",
  "windows_resources",
  "workspace",
+ "zai_proxy_sidecar",
  "zed-reqwest",
  "zed_actions",
  "zed_credentials_provider",

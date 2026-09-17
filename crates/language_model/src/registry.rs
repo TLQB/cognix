@@ -166,6 +166,21 @@ impl LanguageModelRegistry {
     ) {
         let id = provider.id();
 
+        // Provider allowlist gate: when COGNIX_ENABLED_PROVIDERS is set
+        // (comma-separated ids, e.g. "cognix.glm"), only those providers are
+        // registered — everything else never reaches the model selector or
+        // settings. Unset = show all (upstream behaviour, dev builds).
+        if let Ok(list) = std::env::var("COGNIX_ENABLED_PROVIDERS") {
+            let allowed: Vec<String> = list
+                .split(',')
+                .map(|s| s.trim().to_lowercase())
+                .filter(|s| !s.is_empty())
+                .collect();
+            if !allowed.iter().any(|p| p.eq_ignore_ascii_case(id.0.as_ref())) {
+                return;
+            }
+        }
+
         let subscription = provider.subscribe(cx, {
             let id = id.clone();
             move |_, cx| {

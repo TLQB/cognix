@@ -70,3 +70,7 @@ build_v2.sh
 start_build.sh
 llvm.sh
 build_utility.py
+
+# embedded zai-proxy sidecar artifacts (built by scripts/build-zai-proxy-sidecar.sh)
+crates/zai_proxy_sidecar/binaries/
+crates/zai_proxy_sidecar/binaries/
