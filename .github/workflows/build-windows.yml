@@ -91,6 +91,23 @@ jobs:
           Write-Host "LIB=$env:LIB"
           Write-Host "==================="
 
+      - name: Install Go toolchain
+        shell: pwsh
+        run: |
+          # For the vendored zai-proxy sidecar (vendor/zai-proxy).
+          if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
+            choco install golang -y --no-progress
+          }
+          go version
+
+      - name: Build zai-proxy sidecar
+        shell: bash
+        run: |
+          # Produces zai-proxy-windows-amd64 + q-bless-windows-amd64 under
+          # crates/zai_proxy_sidecar/binaries/ for build.rs to embed.
+          ./scripts/build-zai-proxy-sidecar.sh x86_64-pc-windows-msvc
+          ls -lah crates/zai_proxy_sidecar/binaries/
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:

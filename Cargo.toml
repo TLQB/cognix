@@ -14,6 +14,7 @@ members = [
     "crates/justwoker",
     "crates/nextrouter",
     "crates/zen",
+    "crates/zai_proxy_sidecar",
     "crates/tokenrouter",
     "crates/agent_skills",
     "crates/agent_ui",
