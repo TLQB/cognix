@@ -172,9 +172,6 @@ jobs:
           CARGO_PROFILE_RELEASE_DEBUG: "0"    # no debuginfo in rlibs/target
           CARGO_PROFILE_RELEASE_STRIP: "symbols"
           CARGO_INCREMENTAL: "0"
-          # Last-known-good: lld + 4-way codegen OOM-killed the runner agent
-          # mid-build (job fails with NO failed step and logs never upload).
-          RUSTFLAGS: "-C link-arg=-Wl,--thread-count=1"
 
       - name: Failure diagnostics
         if: failure()
