@@ -130,6 +130,20 @@ jobs:
           echo "GLIBC: $(ldd --version 2>&1 | head -1)"
           echo "==================="
 
+      - name: Free disk space
+        # Zed release builds fill the ~14GB runner disk; clear preinstalled
+        # toolsets (~25GB) first. Runs on the host — the job container writes
+        # to the same filesystem.
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false      # keep hosted toolcache (setup-go lives there)
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false   # keep swap — lld linking needs it
+
       - name: Install Go toolchain
         uses: actions/setup-go@v5
         with:
@@ -154,8 +168,12 @@ jobs:
       - name: Build
         run: |
           export CARGO_BUILD_JOBS=4
+          df -h / | tail -1
           cargo build --release -p zed
         timeout-minutes: 240
+        env:
+          CARGO_PROFILE_RELEASE_DEBUG: "0"   # target dir shrinks from ~25GB to ~8GB
+          CARGO_INCREMENTAL: "0"
 
       - name: Verify GLIBC compatibility
         run: |
