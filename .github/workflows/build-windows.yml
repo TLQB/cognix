@@ -92,13 +92,9 @@ jobs:
           Write-Host "==================="
 
       - name: Install Go toolchain
-        shell: pwsh
-        run: |
-          # For the vendored zai-proxy sidecar (vendor/zai-proxy).
-          if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
-            choco install golang -y --no-progress
-          }
-          go version
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.0'   # matches vendor/zai-proxy go.mod
 
       - name: Build zai-proxy sidecar
         shell: bash
