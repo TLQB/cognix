@@ -131,14 +131,9 @@ jobs:
           echo "==================="
 
       - name: Install Go toolchain
-        run: |
-          # For the vendored zai-proxy sidecar (vendor/zai-proxy).
-          for i in 1 2 3; do
-            apt-get install -y golang-go && break
-            if [ "$i" = 3 ]; then echo "ERROR: golang-go install failed"; exit 1; fi
-            sleep 15
-          done
-          go version || { echo "go not on PATH after install"; exit 1; }
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.0'   # matches vendor/zai-proxy go.mod (apt golang-go is 1.13 — too old)
 
       - name: Build zai-proxy sidecar
         run: |

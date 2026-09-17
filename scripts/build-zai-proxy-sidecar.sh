@@ -23,9 +23,11 @@ for triple in "${TARGETS[@]}"; do
   esac
   out="crates/zai_proxy_sidecar/binaries/zai-proxy-${goos}-${goarch}"
   echo "[*] building $out (GOOS=$goos GOARCH=$goarch)"
-  (cd vendor/zai-proxy && GOOS=$goos GOARCH=$goarch CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../../$out" .)
+  (cd vendor/zai-proxy && GOOS=$goos GOARCH=$goarch CGO_ENABLED=0 \
+       go build -trimpath -mod=mod -ldflags "-s -w" -o "../../$out" .)
   qout="crates/zai_proxy_sidecar/binaries/q-bless-${goos}-${goarch}"
   echo "[*] building $qout"
-  (cd vendor/zai-proxy && GOOS=$goos GOARCH=$goarch CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../../$qout" ./cmd/q-bless)
+  (cd vendor/zai-proxy && GOOS=$goos GOARCH=$goarch CGO_ENABLED=0 \
+       go build -trimpath -mod=mod -ldflags "-s -w" -o "../../$qout" ./cmd/q-bless)
  done
 echo "[✓] sidecar binaries ready"
