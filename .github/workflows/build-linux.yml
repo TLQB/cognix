@@ -130,19 +130,22 @@ jobs:
           echo "GLIBC: $(ldd --version 2>&1 | head -1)"
           echo "==================="
 
-      - name: Free disk space
-        # Zed release builds fill the ~14GB runner disk; clear preinstalled
-        # toolsets (~25GB) first. Runs on the host — the job container writes
-        # to the same filesystem.
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with:
-          tool-cache: false      # keep hosted toolcache (setup-go lives there)
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false   # keep swap — lld linking needs it
+      - name: Free disk space (container-safe)
+        # This job runs in a Docker container that SHARES the host runner
+        # disk. Host-level cleanup actions don't help (different mount ns),
+        # but GitHub bind-mounts the hosted toolcache into the container at
+        # /__e and the runner tools at /__t — deleting their CONTENTS frees
+        # real host disk. Rust caches are NOT restored for this job (a
+        # multi-GB tarball restore was what filled the disk), so everything
+        # below is pure headroom for the ~8GB target dir.
+        run: |
+          set -x
+          df -h / | tail -1
+          rm -rf /__e/* 2>/dev/null || true
+          rm -rf /__t/* 2>/dev/null || true
+          apt-get clean
+          rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
+          df -h / | tail -1
 
       - name: Install Go toolchain
         uses: actions/setup-go@v5
@@ -156,14 +159,6 @@ jobs:
           # the cognix binary (include_bytes!).
           ./scripts/build-zai-proxy-sidecar.sh x86_64-unknown-linux-gnu
           ls -lah crates/zai_proxy_sidecar/binaries/
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          prefix-key: "cognix-linux-docker-2004-v3"
-          workspaces: "."
-          shared-key: "linux-release-2004-v3"
-          cache-on-failure: true
 
       - name: Build
         run: |
