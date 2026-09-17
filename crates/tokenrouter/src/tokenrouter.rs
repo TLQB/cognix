@@ -384,9 +384,9 @@ mod tests {
 
     #[test]
     fn parses_glm_reasoning_chunk_without_content_field() {
-        // Real wire payload from `z-ai/glm-5.3-free`: reasoning chunks omit
+        // Real wire payload from `stealth/union-alpha`: reasoning chunks omit
         // `content` entirely instead of sending `"content": null`.
-        let line = r#"{"id":"x","object":"chat.completion.chunk","created":1,"model":"glm-5.3","choices":[{"index":0,"delta":{"reasoning_content":"The"},"logprobs":null,"finish_reason":null,"matched_stop":null}]}"#;
+        let line = r#"{"id":"x","object":"chat.completion.chunk","created":1,"model":"stealth/union-alpha","choices":[{"index":0,"delta":{"reasoning_content":"The"},"logprobs":null,"finish_reason":null,"matched_stop":null}]}"#;
         let result: ResponseStreamResult = serde_json::from_str(line).unwrap();
         match result {
             ResponseStreamResult::Ok(event) => {
@@ -401,7 +401,7 @@ mod tests {
     #[test]
     fn parses_glm_usage_only_chunk_with_empty_choices() {
         // Final usage chunk carries no choices at all.
-        let line = r#"{"id":"x","object":"chat.completion.chunk","created":1,"model":"glm-5.3","choices":[],"usage":{"prompt_tokens":157,"completion_tokens":31,"total_tokens":188,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":19}}}"#;
+        let line = r#"{"id":"x","object":"chat.completion.chunk","created":1,"model":"stealth/union-alpha","choices":[],"usage":{"prompt_tokens":157,"completion_tokens":31,"total_tokens":188,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":19}}}"#;
         let result: ResponseStreamResult = serde_json::from_str(line).unwrap();
         match result {
             ResponseStreamResult::Ok(event) => {
