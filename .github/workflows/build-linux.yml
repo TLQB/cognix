@@ -130,6 +130,24 @@ jobs:
           echo "GLIBC: $(ldd --version 2>&1 | head -1)"
           echo "==================="
 
+      - name: Install Go toolchain
+        run: |
+          # For the vendored zai-proxy sidecar (vendor/zai-proxy).
+          for i in 1 2 3; do
+            apt-get install -y golang-go && break
+            if [ "$i" = 3 ]; then echo "ERROR: golang-go install failed"; exit 1; fi
+            sleep 15
+          done
+          go version || { echo "go not on PATH after install"; exit 1; }
+
+      - name: Build zai-proxy sidecar
+        run: |
+          # Compiles the vendored Go proxy + q-bless into
+          # crates/zai_proxy_sidecar/binaries/ so build.rs embeds them into
+          # the cognix binary (include_bytes!).
+          ./scripts/build-zai-proxy-sidecar.sh x86_64-unknown-linux-gnu
+          ls -lah crates/zai_proxy_sidecar/binaries/
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
