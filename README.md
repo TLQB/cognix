@@ -5,8 +5,8 @@ extended with multi-provider AI routing and a self-hosted model proxy. Zagent is
 **snapshot fork**: it does not share git history with upstream, so upstream fixes are
 ported selectively instead of merged wholesale.
 
-[![Build Linux](https://github.com/TLQB/cognix/actions/workflows/build-linux.yml/badge.svg)](https://github.com/TLQB/cognix/actions/workflows/build-linux.yml)
-[![Build Windows](https://github.com/TLQB/cognix/actions/workflows/build-windows.yml/badge.svg)](https://github.com/TLQB/cognix/actions/workflows/build-windows.yml)
+[![Build Linux](https://github.com/TLQB/zagent/actions/workflows/build-linux.yml/badge.svg)](https://github.com/TLQB/zagent/actions/workflows/build-linux.yml)
+[![Build Windows](https://github.com/TLQB/zagent/actions/workflows/build-windows.yml/badge.svg)](https://github.com/TLQB/zagent/actions/workflows/build-windows.yml)
 
 ---
 
@@ -56,7 +56,7 @@ agent threads.
 Linux and Windows builds are produced by CI:
 
 - **Linux**: download the `zagent-linux-x86_64` artifact from a successful
-  [Build Linux](https://github.com/TLQB/cognix/actions/workflows/build-linux.yml) run, then:
+  [Build Linux](https://github.com/TLQB/zagent/actions/workflows/build-linux.yml) run, then:
 
   ```sh
   unzip zagent-linux-x86_64.zip
@@ -65,7 +65,7 @@ Linux and Windows builds are produced by CI:
 
 - **Windows**: download the `zagent-windows-x86_64` artifact (contains `zed.exe` plus
   the bundled `OpenConsole.exe` / `conpty.dll` for the integrated terminal) from a
-  [Build Windows](https://github.com/TLQB/cognix/actions/workflows/build-windows.yml) run.
+  [Build Windows](https://github.com/TLQB/zagent/actions/workflows/build-windows.yml) run.
 
 Artifacts expire 14 days after the build. Note that the editor binary itself is still
 named `zed` internally; `Zagent` is the product name shown in the UI.
