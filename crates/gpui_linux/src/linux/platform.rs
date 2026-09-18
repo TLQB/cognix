@@ -48,6 +48,19 @@ pub(crate) const KEYRING_LABEL: &str = "zed-github-account";
 const FILE_PICKER_PORTAL_MISSING: &str =
     "Couldn't open file picker due to missing xdg-desktop-portal implementation.";
 
+/// The FileChooser portal `directory` option (needed to pick folders) only
+/// exists since portal version 3; older implementations silently ignore it
+/// and only let the user pick files.
+#[cfg(any(feature = "wayland", feature = "x11"))]
+const FILE_CHOOSER_MIN_PORTAL_VERSION_FOR_DIRECTORIES: u32 = 3;
+
+#[cfg(any(feature = "wayland", feature = "x11"))]
+async fn file_chooser_portal_version() -> anyhow::Result<u32> {
+    Ok(ashpd::desktop::file_chooser::FileChooserProxy::new()
+        .await?
+        .version())
+}
+
 pub(crate) trait LinuxClient {
     fn compositor_name(&self) -> &'static str;
     fn with_common<R>(&self, f: impl FnOnce(&mut LinuxCommon) -> R) -> R;
@@ -418,6 +431,31 @@ impl<P: LinuxClient + 'static> Platform for LinuxPlatform<P> {
                 } else {
                     "Open File"
                 };
+
+                if options.directories {
+                    let portal_version = match file_chooser_portal_version().await {
+                        Ok(version) => version,
+                        Err(err) => {
+                            log::debug!("failed to query FileChooser portal version: {err:#}");
+                            u32::MAX
+                        }
+                    };
+                    if portal_version < FILE_CHOOSER_MIN_PORTAL_VERSION_FOR_DIRECTORIES {
+                        if done_tx
+                            .send(Err(anyhow!(
+                                "This system's file dialog can't choose folders \
+                                 (xdg-desktop-portal FileChooser version {portal_version}; \
+                                 version 3+ required). The built-in picker will be used instead."
+                            )))
+                            .is_err()
+                        {
+                            log::debug!(
+                                "file picker result receiver dropped before the portal error was delivered"
+                            );
+                        }
+                        return;
+                    }
+                }
 
                 let request = match ashpd::desktop::file_chooser::OpenFileRequest::default()
                     .identifier(identifier.await)

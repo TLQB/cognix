@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Remove this line to confirm you've reviewed this PR before submitting.
+
 # Zagent
 
 A high-performance, multiplayer code editor built on [Zed](https://github.com/zed-industries/zed),

@@ -225,12 +225,15 @@ impl ReleaseChannel {
     /// Returns the application ID that's used by Wayland as application ID
     /// and WM_CLASS on X11.
     /// This also has to match the bundle identifier for Zed on macOS.
+    /// Forks must keep this in sync with their desktop-entry StartupWMClass
+    /// (see script/install-desktop-entry-linux) so the taskbar groups the
+    /// window under the fork's launcher instead of a stale Zed entry.
     pub fn app_id(&self) -> &'static str {
         match self {
-            ReleaseChannel::Dev => "dev.zed.Zed-Dev",
-            ReleaseChannel::Nightly => "dev.zed.Zed-Nightly",
-            ReleaseChannel::Preview => "dev.zed.Zed-Preview",
-            ReleaseChannel::Stable => "dev.zed.Zed",
+            ReleaseChannel::Dev => "dev.zagent.Zagent-Dev",
+            ReleaseChannel::Nightly => "dev.zagent.Zagent-Nightly",
+            ReleaseChannel::Preview => "dev.zagent.Zagent-Preview",
+            ReleaseChannel::Stable => "dev.zagent.Zagent",
         }
     }
 
