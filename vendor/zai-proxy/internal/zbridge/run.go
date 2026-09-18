@@ -42,6 +42,8 @@ func NewHandler() http.Handler {
 	mux.HandleFunc("/v1/chat/completions", authMiddleware(chatCompletionsHandler))
 	mux.HandleFunc("/v1/messages", authMiddleware(anthropicMessagesHandler))
 	mux.HandleFunc("/v1/slides", authMiddleware(slidesHandler))
+	mux.HandleFunc("/v1/slides/export/pptx", authMiddleware(slideExportHandler("/sandbox/html-to-ppt")))
+	mux.HandleFunc("/v1/slides/export/stream", authMiddleware(slideExportHandler("/convert/ppt/stream")))
 
 	// Freebuff compatibility aliases. The Codebuff/Freebuff SDK builds its
 	// OpenAI-compatible endpoint as path.Join(baseURL, "/api/v1", endpoint),
