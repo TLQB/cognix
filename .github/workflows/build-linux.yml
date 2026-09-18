@@ -213,5 +213,5 @@ jobs:
         with:
           name: cognix-linux-x86_64
           path: target/release/zed
-          compression-level: 0
+          compression-level: 6
           retention-days: 14
