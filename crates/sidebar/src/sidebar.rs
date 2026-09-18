@@ -1,4 +1,5 @@
 mod slides;
+pub use slides::{generate_slides, GenerateSlides};
 mod thread_switcher;
 
 use acp_thread::ThreadStatus;
