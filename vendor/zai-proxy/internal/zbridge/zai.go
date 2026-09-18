@@ -396,6 +396,7 @@ func sendToZAI(prompt string, opts SendOptions) (<-chan ZAIResult, error) {
 		FeaturesMap       map[string]interface{}
 		Messages          []Message
 		ClientMessagesRaw json.RawMessage
+		Files             []map[string]interface{}
 		RequestID         string
 	}{
 		Model:             model,
@@ -403,6 +404,7 @@ func sendToZAI(prompt string, opts SendOptions) (<-chan ZAIResult, error) {
 		FeaturesMap:       featuresMap,
 		Messages:          messages,
 		ClientMessagesRaw: opts.ClientMessagesRaw,
+		Files:             opts.Files,
 		RequestID:         opts.RequestID,
 	}
 
@@ -422,6 +424,7 @@ func sendToZAIStream(prompt string, opts struct {
 	FeaturesMap       map[string]interface{}
 	Messages          []Message
 	ClientMessagesRaw json.RawMessage
+	Files             []map[string]interface{}
 	RequestID         string
 }, ch chan<- ZAIResult) error {
 
@@ -510,6 +513,12 @@ func sendToZAIStream(prompt string, opts struct {
 			"stream":               true,
 			"captcha_verify_param": captchaParam,
 			"features":             featuresPayload,
+		}
+
+		// Attach uploaded files (images) only when present - text-only requests
+		// keep the exact body shape they always had.
+		if len(opts.Files) > 0 {
+			requestBody["files"] = opts.Files
 		}
 
 		bodyBytes, _ := json.Marshal(requestBody)

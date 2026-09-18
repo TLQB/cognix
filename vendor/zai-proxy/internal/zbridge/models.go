@@ -130,6 +130,21 @@ func getFeaturesForModel(modelID string) Features {
 	return f
 }
 
+// modelSupportsVision returns true only when the model's capabilities JSON
+// explicitly contains "vision": true. Models without the field (or with it
+// set to false) are treated as text-only.
+func modelSupportsVision(modelID string) bool {
+	if modelID == "" {
+		return false
+	}
+	caps := getModelCapabilities(modelID)
+	if caps == nil {
+		return false
+	}
+	v, ok := caps["vision"].(bool)
+	return ok && v
+}
+
 // getModelCapabilities returns the raw capabilities map for a model.
 func getModelCapabilities(modelID string) map[string]interface{} {
 	for _, m := range fetchModelsFromZAI() {

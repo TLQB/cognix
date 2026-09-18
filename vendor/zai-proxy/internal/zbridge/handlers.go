@@ -96,6 +96,25 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		lastMsgIsToolResult = true
 	}
 
+	// -- Vision: extract image_url parts, upload them to Z.AI, strip them --
+	// from the messages. cleanedMessages is byte-identical to body.Messages
+	// when the request carries no images (the common case).
+	cleanedMessages, files, vErr := processVisionMessages(r.Context(), body.Messages)
+	if vErr != nil {
+		writeJSON(w, 400, formatOpenAIError(vErr.Error(), "invalid_request_error", nil))
+		return
+	}
+	if len(files) > 0 {
+		if !modelSupportsVision(model) {
+			log.Printf("[Vision] %d image(s) attached but model %q does not advertise vision support; forwarding anyway", len(files), model)
+		}
+		// Re-parse the cleaned (text-only) messages for prompt building.
+		var localMsgs []Message
+		if err := json.Unmarshal(cleanedMessages, &localMsgs); err == nil {
+			messages = localMsgs
+		}
+	}
+
 	// A chat request means the captcha cache will be drawn from soon —
 	// resume background generation now instead of letting the first cache
 	// miss pay the ~0.5s synchronous mint (idle pause: 3min, see captcha.go).
@@ -132,9 +151,9 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 	// ── Agent mode: transform tools & roles for Z.AI compatibility ──
 	// Modern shim (default): one XML-sectioned prompt in a single user message.
 	// Legacy shim: [ROLE: ...] rewritten user messages + tool contract message.
-	var transformedMessages json.RawMessage = body.Messages
+	var transformedMessages json.RawMessage = cleanedMessages
 	if config.AgentMode {
-		if tm, err := agentTransformMessages(body.Messages, body.Tools); err == nil {
+		if tm, err := agentTransformMessages(cleanedMessages, body.Tools); err == nil {
 			transformedMessages = tm
 			// Re-parse so local `messages` reflects the rewritten content
 			var localMsgs []Message
@@ -154,6 +173,7 @@ func chatCompletionsHandler(w http.ResponseWriter, r *http.Request) {
 		Model:             model,
 		ChatID:            chatID,
 		ClientMessagesRaw: transformedMessages,
+		Files:             files,
 		ReasoningEffort:   body.ReasoningEffort,
 		RequestID:         requestId,
 	}

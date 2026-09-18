@@ -3629,17 +3629,34 @@ func transformMessagesForAgentModern(rawMessages json.RawMessage, toolsRaw json.
 // agentTransformMessages rewrites the incoming OpenAI messages array for the
 // active agent shim, returning the JSON-encoded messages to send upstream.
 func agentTransformMessages(rawMessages, toolsRaw json.RawMessage) ([]byte, error) {
+	var out []byte
+	var err error
 	if config.agentNative() {
-		return transformMessagesForAgentNative(rawMessages, toolsRaw)
+		out, err = transformMessagesForAgentNative(rawMessages, toolsRaw)
+	} else if config.agentModern() {
+		out, err = transformMessagesForAgentModern(rawMessages, toolsRaw)
+	} else {
+		var tools []interface{}
+		if len(toolsRaw) > 0 {
+			_ = json.Unmarshal(toolsRaw, &tools)
+		}
+		out, err = transformMessagesForAgent(rawMessages, tools)
 	}
-	if config.agentModern() {
-		return transformMessagesForAgentModern(rawMessages, toolsRaw)
+	if err != nil {
+		return out, err
 	}
-	var tools []interface{}
-	if len(toolsRaw) > 0 {
-		_ = json.Unmarshal(toolsRaw, &tools)
+	// Agent shims flatten message content to plain text, dropping the
+	// image_url parts that processVisionMessages rewrote to uploaded Z.AI
+	// file ids. Re-attach them to the final user message so the model still
+	// receives the pixels (files array alone is not referenced otherwise).
+	if imageParts := extractImageParts(rawMessages); len(imageParts) > 0 {
+		if attached, aerr := attachImageParts(out, imageParts); aerr == nil {
+			return attached, nil
+		} else {
+			logError("agent vision attach failed: " + aerr.Error())
+		}
 	}
-	return transformMessagesForAgent(rawMessages, tools)
+	return out, nil
 }
 
 // agentExtractToolCalls parses tool-call blocks out of finished assistant text

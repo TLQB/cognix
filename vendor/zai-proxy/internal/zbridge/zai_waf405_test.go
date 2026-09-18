@@ -70,6 +70,7 @@ func TestWAF405SweepsPoolUntilPass(t *testing.T) {
 		FeaturesMap       map[string]interface{}
 		Messages          []Message
 		ClientMessagesRaw json.RawMessage
+		Files             []map[string]interface{}
 		RequestID         string
 	}{Model: "glm-4.7", ChatID: "test-chat"}, ch)
 	close(ch) // sendToZAIStream only closes via sendToZAI's goroutine wrapper
@@ -118,6 +119,7 @@ func TestWAF405SweepsPoolUntilPass(t *testing.T) {
 		FeaturesMap       map[string]interface{}
 		Messages          []Message
 		ClientMessagesRaw json.RawMessage
+		Files             []map[string]interface{}
 		RequestID         string
 	}{Model: "glm-4.7", ChatID: "test-chat"}, ch2)
 	close(ch2)
@@ -180,6 +182,7 @@ func TestWAF405ExhaustedPoolSurfacesError(t *testing.T) {
 		FeaturesMap       map[string]interface{}
 		Messages          []Message
 		ClientMessagesRaw json.RawMessage
+		Files             []map[string]interface{}
 		RequestID         string
 	}{Model: "glm-4.7", ChatID: "test-chat"}, ch2)
 	if err == nil {
