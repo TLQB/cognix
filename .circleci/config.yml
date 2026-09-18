@@ -52,11 +52,11 @@ jobs:
       - run:
           name: Strip binary
           command: |
-            strip target/release/zed
-            ls -lah target/release/zed
+            strip target/release/zagent
+            ls -lah target/release/zagent
       
       - store_artifacts:
-          path: target/release/zed
+          path: target/release/zagent
           destination: zagent-linux-x86_64
 
 workflows:
