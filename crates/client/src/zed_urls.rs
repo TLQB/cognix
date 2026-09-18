@@ -37,7 +37,7 @@ pub fn account_url(cx: &App) -> String {
 /// Returns the URL to the start trial page on zed.dev.
 /// Returns the URL to the start trial page on zed.dev.
 pub fn start_trial_url(_cx: &App) -> String {
-    "https://cognix.sryze.cc".to_string()
+    "https://zagent.sryze.cc".to_string()
 }
 
 /// Returns the URL to the upgrade page on zed.dev.

@@ -24,7 +24,7 @@ use ui::IconName;
 
 const FALLBACK_API_KEY: &str = "nr_NTiqDTeawS3rBWv0T0tDORc6DT_uUVlsgBbwBLFN7Pc";
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.nextrouter");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.nextrouter");
 const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Next Router");
 
 const API_KEY_ENV_VAR_NAME: &str = "NEXTROUTER_API_KEY";
@@ -229,7 +229,7 @@ impl LanguageModelProvider for NextRouterLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, cx: &App) -> Option<Arc<dyn LanguageModel>> {

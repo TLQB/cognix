@@ -10,9 +10,9 @@
 //! The Z.AI token is a PERSONAL credential and is never baked into the
 //! binary. It reaches the proxy through, in priority order:
 //!   1. ZAI_TOKEN environment variable,
-//!   2. COGNIX_GLM_API_KEY environment variable (provider hand-off),
+//!   2. ZAGENT_GLM_API_KEY environment variable (provider hand-off),
 //!   3. the token file written by [`set_token`] when the user signs in via
-//!      the cognix.glm provider UI (stored in the OS keychain by zed, mirrored
+//!      the zagent.glm provider UI (stored in the OS keychain by zed, mirrored
 //!      here so the Go proxy can read it on restart).
 
 use anyhow::{anyhow, Context, Result};
@@ -51,15 +51,15 @@ pub fn init() {
     // other thread reads the environment (gpui threads spawn later), so env
     // mutation here is single-threaded.
     // Bundled-release defaults — both overridable by the user's environment:
-    //   COGNIX_ENABLED_PROVIDERS : model-selector allowlist (default: glm only)
-    //   COGNIX_GLM_API_KEY       : personal token handed to the glm provider
+    //   ZAGENT_ENABLED_PROVIDERS : model-selector allowlist (default: glm only)
+    //   ZAGENT_GLM_API_KEY       : personal token handed to the glm provider
     unsafe {
-        if std::env::var_os("COGNIX_ENABLED_PROVIDERS").is_none() {
-            std::env::set_var("COGNIX_ENABLED_PROVIDERS", "cognix.glm");
+        if std::env::var_os("ZAGENT_ENABLED_PROVIDERS").is_none() {
+            std::env::set_var("ZAGENT_ENABLED_PROVIDERS", "zagent.glm");
         }
-        if std::env::var_os("COGNIX_GLM_API_KEY").is_none() {
+        if std::env::var_os("ZAGENT_GLM_API_KEY").is_none() {
             if let Some(token) = resolve_token() {
-                std::env::set_var("COGNIX_GLM_API_KEY", token);
+                std::env::set_var("ZAGENT_GLM_API_KEY", token);
             }
         }
     }
@@ -179,9 +179,9 @@ fn ensure_running() -> Result<()> {
 }
 
 /// Personal-token resolution order (NEVER embedded in the binary):
-/// env ZAI_TOKEN → env COGNIX_GLM_API_KEY → token file (written by set_token).
+/// env ZAI_TOKEN → env ZAGENT_GLM_API_KEY → token file (written by set_token).
 fn resolve_token() -> Option<String> {
-    for var in ["ZAI_TOKEN", "COGNIX_GLM_API_KEY"] {
+    for var in ["ZAI_TOKEN", "ZAGENT_GLM_API_KEY"] {
         if let Ok(t) = std::env::var(var) {
             if !t.is_empty() {
                 return Some(t);

@@ -4,8 +4,8 @@ export CXX=clang++-9
 export CARGO_BUILD_JOBS=2
 export CARGO_INCREMENTAL=1
 
-LOG="/tmp/cognix_build_pull.log"
-cd /home/tlqbao/Desktop/cognix
+LOG="/tmp/zagent_build_pull.log"
+cd /home/tlqbao/Desktop/zagent
 
 echo "=== Build started at $(date)" > "$LOG"
 cargo build --release -p zed 2>&1 | tee -a "$LOG"

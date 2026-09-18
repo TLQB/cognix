@@ -183,7 +183,7 @@ impl settings::Settings for AllLanguageModelSettings {
             kilo: KiloSettings {
                 api_url: kilo.api_url.unwrap_or_default(),
                 available_models: kilo.available_models.unwrap_or_default(),
-                custom_headers: custom_headers_from("cognix-kilo", kilo.custom_headers, &[]),
+                custom_headers: custom_headers_from("zagent-kilo", kilo.custom_headers, &[]),
             },
             lmstudio: LmStudioSettings {
                 api_url: lmstudio.api_url.unwrap(),

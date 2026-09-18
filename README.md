@@ -1,19 +1,19 @@
 > [!IMPORTANT]
 > Remove this line to confirm you've reviewed this PR before submitting.
 
-# Cognix
+# Zagent
 
 A fork of [Zed](https://github.com/zed-industries/zed) focused on multi-provider AI
 routing: a high-performance, multiplayer code editor with first-class support for a
 wide range of language model backends.
 
-[![Build Linux](https://github.com/TLQB/cognix/actions/workflows/build-linux.yml/badge.svg)](https://github.com/TLQB/cognix/actions/workflows/build-linux.yml)
+[![Build Linux](https://github.com/TLQB/zagent/actions/workflows/build-linux.yml/badge.svg)](https://github.com/TLQB/zagent/actions/workflows/build-linux.yml)
 
 ---
 
 ### What this fork adds
 
-Beyond upstream Zed, Cognix ships additional language model providers wired into the
+Beyond upstream Zed, Zagent ships additional language model providers wired into the
 agent panel, each with its own model registry and streaming adapter:
 
 | Provider | Crate |
@@ -32,19 +32,19 @@ Plus a thread sidebar (`crates/sidebar`) for switching between agent threads.
 ### Installation
 
 Linux x86_64 builds are produced by the
-[Build Linux](https://github.com/TLQB/cognix/actions/workflows/build-linux.yml)
-workflow. Download the `cognix-linux-x86_64` artifact from a successful run, then:
+[Build Linux](https://github.com/TLQB/zagent/actions/workflows/build-linux.yml)
+workflow. Download the `zagent-linux-x86_64` artifact from a successful run, then:
 
 ```sh
-unzip cognix-linux-x86_64.zip
-install -m 755 zed ~/.local/bin/cognix
+unzip zagent-linux-x86_64.zip
+install -m 755 zed ~/.local/bin/zagent
 ```
 
 Artifacts expire 14 days after the build.
 
 ### Building from source
 
-Cognix uses the same build system as upstream Zed:
+Zagent uses the same build system as upstream Zed:
 
 - [Building for macOS](./docs/src/development/macos.md)
 - [Building for Linux](./docs/src/development/linux.md)
@@ -67,7 +67,7 @@ syllable. The patch is applied through `[patch]` in the workspace `Cargo.toml`.
 
 ### Licensing
 
-Cognix source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0
+Zagent source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0
 components where marked, following upstream Zed.
 
 License information for third party dependencies must be correctly provided for CI
@@ -82,5 +82,5 @@ following:
 ### Upstream
 
 For documentation, contribution guidelines, and general editor features, see the
-[upstream Zed repository](https://github.com/zed-industries/zed). Cognix tracks
+[upstream Zed repository](https://github.com/zed-industries/zed). Zagent tracks
 upstream `main` and merges periodically.

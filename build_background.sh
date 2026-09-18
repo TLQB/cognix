@@ -5,9 +5,9 @@ export CC=clang-9
 export CXX=clang++-9
 export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
 
-LOG="/tmp/cognix_build_$(date +%Y%m%d_%H%M%S).log"
+LOG="/tmp/zagent_build_$(date +%Y%m%d_%H%M%S).log"
 
-cd /home/tlqbao/Desktop/cognix
+cd /home/tlqbao/Desktop/zagent
 
 echo "=== Build started at $(date) ===" | tee "$LOG"
 echo "PID: $$" | tee -a "$LOG"

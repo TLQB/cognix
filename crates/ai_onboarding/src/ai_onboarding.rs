@@ -165,7 +165,7 @@ impl ZedAiOnboarding {
             .w_full()
             .relative()
             .gap_1()
-            .child(Headline::new("Welcome to Cognix AI"))
+            .child(Headline::new("Welcome to Zagent AI"))
             .child(
                 Label::new("Start by using the best AI models for free.")
                     .color(Color::Muted)
@@ -173,7 +173,7 @@ impl ZedAiOnboarding {
             )
             .child(PlanDefinitions.sign_in_upsell())
             .child(
-                Button::new("sign_in", "Check Cognix Website")
+                Button::new("sign_in", "Check Zagent Website")
                     .disabled(signing_in)
                     .full_width()
                     .style(ButtonStyle::Tinted(ui::TintColor::Accent))
@@ -192,7 +192,7 @@ impl ZedAiOnboarding {
                 .relative()
                 .min_w_0()
                 .gap_1()
-                .child(Headline::new("Welcome to Cognix AI"))
+                .child(Headline::new("Welcome to Zagent AI"))
                 .child(YoungAccountBanner)
                 .child(
                     v_flex()
@@ -229,7 +229,7 @@ impl ZedAiOnboarding {
                 .w_full()
                 .relative()
                 .gap_1()
-                .child(Headline::new("Welcome to Cognix AI"))
+                .child(Headline::new("Welcome to Zagent AI"))
                 .child(
                     v_flex()
                         .mt_2()
@@ -273,7 +273,7 @@ impl ZedAiOnboarding {
                         )
                         .child(PlanDefinitions.pro_trial(true))
                         .child(
-                            Button::new("pro", "Check Cognix Website")
+                            Button::new("pro", "Check Zagent Website")
                                 .full_width()
                                 .style(ButtonStyle::Tinted(ui::TintColor::Accent))
                                 .on_click(move |_, _window, cx| {

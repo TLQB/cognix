@@ -33,7 +33,7 @@ static FALLBACK_API_KEY: LazyLock<SharedString> = LazyLock::new(|| {
     SharedString::from(s)
 });
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.tokenrouter");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.tokenrouter");
 const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("TokenRouter");
 
 const API_KEY_ENV_VAR_NAME: &str = "TOKENROUTER_API_KEY";
@@ -212,7 +212,7 @@ impl LanguageModelProvider for TokenRouterLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, cx: &App) -> Option<Arc<dyn LanguageModel>> {

@@ -20,8 +20,8 @@ use kilo::KILO_API_URL;
 
 use ui::IconName;
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.kilo");
-const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Cognix-Kilo");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.kilo");
+const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Zagent-Kilo");
 
 // ====================================================================
 // Reasoning-effort configuration
@@ -206,7 +206,7 @@ impl LanguageModelProvider for KiloLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, cx: &App) -> Option<Arc<dyn LanguageModel>> {

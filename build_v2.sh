@@ -1,11 +1,11 @@
 #!/bin/bash
-exec > /tmp/cognix_build_v2.log 2>&1
+exec > /tmp/zagent_build_v2.log 2>&1
 echo "=== Build v2 started at $(date) ==="
 export CC=clang-9
 export CXX=clang++-9
 export CARGO_BUILD_JOBS=1
 export CARGO_INCREMENTAL=1
-cd /home/tlqbao/Desktop/cognix
+cd /home/tlqbao/Desktop/zagent
 cargo build --release -p zed
 EXIT_CODE=$?
 echo "=== Build v2 finished at $(date) with exit code $EXIT_CODE ==="

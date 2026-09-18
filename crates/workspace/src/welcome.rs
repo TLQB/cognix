@@ -448,9 +448,9 @@ impl Render for WelcomePage {
         };
 
         let welcome_label = if self.fallback_to_recent_projects {
-            "Welcome back to Cognix"
+            "Welcome back to Zagent"
         } else {
-            "Welcome to Cognix"
+            "Welcome to Zagent"
         };
 
         h_flex()
@@ -477,7 +477,7 @@ impl Render for WelcomePage {
                             .justify_center()
                             .mb_4()
                             .gap_4()
-                            .child(Vector::square(VectorName::CognixLogo, rems_from_px(45.)))
+                            .child(Vector::square(VectorName::ZagentLogo, rems_from_px(45.)))
                             .child(
                                 v_flex().child(Headline::new(welcome_label)).child(
                                     Label::new("The agentic editor for what's next")

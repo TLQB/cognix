@@ -57,7 +57,7 @@ jobs:
       
       - store_artifacts:
           path: target/release/zed
-          destination: cognix-linux-x86_64
+          destination: zagent-linux-x86_64
 
 workflows:
   version: 2

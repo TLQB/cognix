@@ -107,7 +107,7 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "cognix-windows-v2"
+          prefix-key: "zagent-windows-v2"
           workspaces: "."
           shared-key: "windows-release-v2"
           cache-on-failure: true
@@ -179,7 +179,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cognix-windows-x86_64
+          name: zagent-windows-x86_64
           path: |
             target/x86_64-pc-windows-msvc/release/zed.exe
             target/x86_64-pc-windows-msvc/release/OpenConsole.exe

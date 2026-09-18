@@ -33,7 +33,7 @@ static FALLBACK_API_KEY: LazyLock<SharedString> = LazyLock::new(|| {
     SharedString::from(s)
 });
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.justwoker");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.justwoker");
 const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("JustWoker");
 
 const API_KEY_ENV_VAR_NAME: &str = "JUSTWOKER_API_KEY";
@@ -235,7 +235,7 @@ impl LanguageModelProvider for JustWokerLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, cx: &App) -> Option<Arc<dyn LanguageModel>> {

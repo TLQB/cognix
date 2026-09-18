@@ -20,7 +20,7 @@ use std::sync::{Arc, LazyLock};
 
 use ui::IconName;
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.zen");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.zen");
 const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Zen");
 
 const API_KEY_ENV_VAR_NAME: &str = "ZEN_API_KEY";
@@ -213,7 +213,7 @@ impl LanguageModelProvider for ZenLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, cx: &App) -> Option<Arc<dyn LanguageModel>> {

@@ -347,11 +347,11 @@ impl Render for Onboarding {
                                     .child(
                                         h_flex()
                                             .gap_4()
-                                            .child(Vector::square(VectorName::CognixLogo, rems(2.5)))
+                                            .child(Vector::square(VectorName::ZagentLogo, rems(2.5)))
                                             .child(
                                                 v_flex()
                                                     .child(
-                                                        Headline::new("Welcome to Cognix")
+                                                        Headline::new("Welcome to Zagent")
                                                             .size(HeadlineSize::Small),
                                                     )
                                                     .child(

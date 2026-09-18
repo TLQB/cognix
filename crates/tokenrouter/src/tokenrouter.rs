@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// Registry listing TokenRouter models (OpenAI-style `/models` payload).
-pub const TOKENROUTER_MODELS_URL: &str = "https://raw.githubusercontent.com/TLQB/cognix/refs/heads/main/tokenrouter_models";
+pub const TOKENROUTER_MODELS_URL: &str = "https://raw.githubusercontent.com/TLQB/zagent/refs/heads/main/tokenrouter_models";
 pub const TOKENROUTER_API_URL: &str = "https://api.tokenrouter.com/v1";
 
 const DEFAULT_CONTEXT_LENGTH: u64 = 131_072;

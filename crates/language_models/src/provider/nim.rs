@@ -44,8 +44,8 @@ static FALLBACK_API_KEY: LazyLock<SharedString> = LazyLock::new(|| {
 const NIM_DOWNLOAD_URL: &str = "https://build.nvidia.com";
 const NIM_MODELS_URL: &str = "https://integrate.api.nvidia.com/v1/models";
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.nim");
-const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Cognix-NIM");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.nim");
+const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Zagent-NIM");
 
 const API_KEY_ENV_VAR_NAME: &str = "NIM_API_KEY";
 static API_KEY_ENV_VAR: LazyLock<EnvVar> = env_var!(API_KEY_ENV_VAR_NAME);
@@ -587,7 +587,7 @@ impl LanguageModelProvider for NimLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, _: &App) -> Option<Arc<dyn LanguageModel>> {

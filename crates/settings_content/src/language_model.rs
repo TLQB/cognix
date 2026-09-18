@@ -17,7 +17,7 @@ pub struct AllLanguageModelSettingsContent {
     pub google: Option<GoogleSettingsContent>,
     #[serde(rename = "llama.cpp")]
     pub llama_cpp: Option<LlamaCppSettingsContent>,
-    #[serde(rename = "cognix.glm")]
+    #[serde(rename = "zagent.glm")]
     pub glm: Option<GLMSettingsContent>,
     #[serde(rename = "nim")]
     pub nim: Option<NimSettingsContent>,
@@ -29,7 +29,7 @@ pub struct AllLanguageModelSettingsContent {
     pub nextrouter: Option<NextRouterSettingsContent>,
     #[serde(rename = "zen")]
     pub zen: Option<ZenSettingsContent>,
-    #[serde(rename = "cognix.kilo")]
+    #[serde(rename = "zagent.kilo")]
     pub kilo: Option<KiloSettingsContent>,
     pub lmstudio: Option<LmStudioSettingsContent>,
     pub mistral: Option<MistralSettingsContent>,

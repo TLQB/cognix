@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the vendored zai-proxy sidecar binary for embedding into cognix.
+# Builds the vendored zai-proxy sidecar binary for embedding into zagent.
 # Usage: scripts/build-zai-proxy-sidecar.sh [target-triple ...]
 #        (default: host target; outputs crates/zai_proxy_sidecar/binaries/)
 set -euo pipefail

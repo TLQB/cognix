@@ -156,7 +156,7 @@ jobs:
         run: |
           # Compiles the vendored Go proxy + q-bless into
           # crates/zai_proxy_sidecar/binaries/ so build.rs embeds them into
-          # the cognix binary (include_bytes!).
+          # the zagent binary (include_bytes!).
           ./scripts/build-zai-proxy-sidecar.sh x86_64-unknown-linux-gnu
           ls -lah crates/zai_proxy_sidecar/binaries/
           go clean -modcache 2>/dev/null || true   # ~1GB back, deps no longer needed
@@ -211,7 +211,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cognix-linux-x86_64
+          name: zagent-linux-x86_64
           path: target/release/zed
           compression-level: 6
           retention-days: 14

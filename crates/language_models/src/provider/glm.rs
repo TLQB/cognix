@@ -33,10 +33,10 @@ use crate::AllLanguageModelSettings;
 const GLM_DOWNLOAD_URL: &str = "https://github.com/izaart95-jpg/GLM-Free-API";
 const GLM_MODELS_URL: &str = "https://openrouter.ai/z-ai";
 
-const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("cognix.glm");
-const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Cognix-GLM");
+const PROVIDER_ID: LanguageModelProviderId = LanguageModelProviderId::new("zagent.glm");
+const PROVIDER_NAME: LanguageModelProviderName = LanguageModelProviderName::new("Zagent-GLM");
 
-const API_KEY_ENV_VAR_NAME: &str = "COGNIX_GLM_API_KEY";
+const API_KEY_ENV_VAR_NAME: &str = "ZAGENT_GLM_API_KEY";
 static API_KEY_ENV_VAR: LazyLock<EnvVar> = env_var!(API_KEY_ENV_VAR_NAME);
 
 const MODEL_EVENT_RECONNECT_INTERVAL: Duration = Duration::from_secs(5);
@@ -550,7 +550,7 @@ impl LanguageModelProvider for GLMLanguageModelProvider {
     }
 
     fn icon(&self) -> IconOrSvg {
-        IconOrSvg::Icon(IconName::Cognix)
+        IconOrSvg::Icon(IconName::Zagent)
     }
 
     fn default_model(&self, _: &App) -> Option<Arc<dyn LanguageModel>> {
