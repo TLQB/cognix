@@ -214,14 +214,18 @@ pub fn generate_slides(
 	_: &GenerateSlides,
 	cx: &mut gpui::Context<Workspace>,
 ) {
+	struct SlidesNotification;
+	let notification_id = workspace::notifications::NotificationId::unique::<SlidesNotification>();
 	let topic = current_topic(cx);
-	let notification_id = workspace::notifications::NotificationId::Named("zagent-slides".into());
 	if topic.is_empty() {
-		workspace.show_toast(workspace::Toast::new(
-			notification_id,
-			"No topic: copy the text describing the deck you want, then run Generate Slides again."
-				.to_string(),
-		));
+		workspace.show_toast(
+			workspace::Toast::new(
+				notification_id,
+				"No topic: copy the text describing the deck you want, then run Generate Slides again.",
+			)
+			.autohide(),
+			cx,
+		);
 		return;
 	}
 
@@ -276,13 +280,13 @@ pub fn generate_slides(
 							html_path.display()
 						),
 					};
-					workspace.show_toast(workspace::Toast::new(notification_id, summary));
+					workspace.show_toast(workspace::Toast::new(notification_id, summary).autohide(), cx);
 				}
 				Err(err) => {
-					workspace.show_toast(workspace::Toast::new(
-						notification_id,
-						format!("Slides failed: {err:#}"),
-					));
+					workspace.show_toast(
+						workspace::Toast::new(notification_id, format!("Slides failed: {err:#}")).autohide(),
+						cx,
+					);
 				}
 			})
 			.ok();
