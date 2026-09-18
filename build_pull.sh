@@ -12,9 +12,9 @@ cargo build --release -p zed 2>&1 | tee -a "$LOG"
 EXIT_CODE=${PIPESTATUS[0]}
 echo "=== Build finished at $(date) with exit code $EXIT_CODE" >> "$LOG"
 
-if [ -f target/release/zed ]; then
+if [ -f target/release/zagent ]; then
     echo "SUCCESS" >> "$LOG"
-    ls -la target/release/zed >> "$LOG"
+    ls -la target/release/zagent >> "$LOG"
 else
     echo "FAILED - no binary" >> "$LOG"
 fi

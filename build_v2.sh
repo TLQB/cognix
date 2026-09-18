@@ -9,8 +9,8 @@ cd /home/tlqbao/Desktop/zagent
 cargo build --release -p zed
 EXIT_CODE=$?
 echo "=== Build v2 finished at $(date) with exit code $EXIT_CODE ==="
-if [ -f target/release/zed ]; then
-    echo "SUCCESS" && ls -la target/release/zed
+if [ -f target/release/zagent ]; then
+    echo "SUCCESS" && ls -la target/release/zagent
 else
     echo "FAILED - no binary"
 fi

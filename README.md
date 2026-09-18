@@ -60,15 +60,14 @@ Linux and Windows builds are produced by CI:
 
   ```sh
   unzip zagent-linux-x86_64.zip
-  install -m 755 zed ~/.local/bin/zagent
+  install -m 755 zagent ~/.local/bin/zagent
   ```
 
 - **Windows**: download the `zagent-windows-x86_64` artifact (contains `zed.exe` plus
   the bundled `OpenConsole.exe` / `conpty.dll` for the integrated terminal) from a
   [Build Windows](https://github.com/TLQB/zagent/actions/workflows/build-windows.yml) run.
 
-Artifacts expire 14 days after the build. Note that the editor binary itself is still
-named `zed` internally; `Zagent` is the product name shown in the UI.
+Artifacts expire 14 days after the build. The editor binary is named `zagent` (the crate remains `zed` internally).
 
 ### Building from source
 

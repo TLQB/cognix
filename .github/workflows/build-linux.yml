@@ -184,7 +184,7 @@ jobs:
       - name: Verify GLIBC compatibility
         run: |
           echo "=== GLIBC Verification ==="
-          BINARY="target/release/zed"
+          BINARY="target/release/zagent"
           if [ ! -f "$BINARY" ]; then
             echo "❌ ERROR: Binary not found at $BINARY"
             exit 1
@@ -205,13 +205,13 @@ jobs:
 
       - name: Strip binary
         run: |
-          strip target/release/zed
-          ls -lah target/release/zed
+          strip target/release/zagent
+          ls -lah target/release/zagent
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: zagent-linux-x86_64
-          path: target/release/zed
+          path: target/release/zagent
           compression-level: 6
           retention-days: 14

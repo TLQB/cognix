@@ -8,9 +8,9 @@ echo "Build started at $(date)" > /tmp/zagent_build_bg.log
 cargo build --release -p zed 2>&1 | tee -a /tmp/zagent_build_bg.log
 EXIT_CODE=${PIPESTATUS[0]}
 echo "Build finished at $(date) with exit code $EXIT_CODE" >> /tmp/zagent_build_bg.log
-if [ -f target/release/zed ]; then
-    echo "SUCCESS: target/release/zed exists" >> /tmp/zagent_build_bg.log
-    ls -la target/release/zed >> /tmp/zagent_build_bg.log
+if [ -f target/release/zagent ]; then
+    echo "SUCCESS: target/release/zagent exists" >> /tmp/zagent_build_bg.log
+    ls -la target/release/zagent >> /tmp/zagent_build_bg.log
 else
     echo "FAILED: no binary" >> /tmp/zagent_build_bg.log
 fi

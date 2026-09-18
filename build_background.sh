@@ -18,11 +18,11 @@ EXIT_CODE=$?
 echo "=== Build finished at $(date) with exit code $EXIT_CODE ===" >> "$LOG"
 
 # Check if binary exists
-if [ -f target/release/zed ]; then
-    echo "✅ SUCCESS: target/release/zed created" >> "$LOG"
-    ls -la target/release/zed >> "$LOG"
+if [ -f target/release/zagent ]; then
+    echo "✅ SUCCESS: target/release/zagent created" >> "$LOG"
+    ls -la target/release/zagent >> "$LOG"
 else
-    echo "❌ FAILED: target/release/zed not found" >> "$LOG"
+    echo "❌ FAILED: target/release/zagent not found" >> "$LOG"
 fi
 
 echo "Log file: $LOG"

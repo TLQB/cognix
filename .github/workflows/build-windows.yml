@@ -121,7 +121,7 @@ jobs:
       - name: Verify binary exists
         shell: pwsh
         run: |
-          $binary = "target/x86_64-pc-windows-msvc/release/zed.exe"
+          $binary = "target/x86_64-pc-windows-msvc/release/zagent.exe"
           if (Test-Path $binary) {
               Write-Host "Binary found: $binary"
               $size = (Get-Item $binary).Length / 1MB
@@ -135,7 +135,7 @@ jobs:
         shell: pwsh
         run: |
           # ConPTY NuGet package from Microsoft Terminal v1.23.13503.0.
-          # Without these files, zed.exe cannot spawn a shell on Windows.
+          # Without these files, zagent.exe cannot spawn a shell on Windows.
           $termUrl = "https://github.com/microsoft/terminal/releases/download/v1.23.13503.0/Microsoft.Windows.Console.ConPTY.1.23.251216003.nupkg"
           $nupkgPath = "$env:TEMP\conpty.nupkg"
           $nupkgExtractPath = "$env:TEMP\conpty"
@@ -181,7 +181,7 @@ jobs:
         with:
           name: zagent-windows-x86_64
           path: |
-            target/x86_64-pc-windows-msvc/release/zed.exe
+            target/x86_64-pc-windows-msvc/release/zagent.exe
             target/x86_64-pc-windows-msvc/release/OpenConsole.exe
             target/x86_64-pc-windows-msvc/release/conpty.dll
           compression-level: 6
