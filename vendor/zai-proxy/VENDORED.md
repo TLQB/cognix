@@ -1,7 +1,7 @@
 # Vendored: zai-proxy
 
 Cloned from: /home/tlqbao/Desktop/zai-proxy (origin: https://github.com/TLQB/zai-proxy.git)
-Upstream commit: 5bcfe5812 Port vision (image input) support from upstream/main
+Upstream commit: 3f862c4a Add /v1/slides: PPT generation over the plain chat pipeline
 
 This copy is vendored into cognix so the release build can embed the zai-proxy
 sidecar (model proxy on 127.0.0.1:3001). Build the sidecar binary with:
