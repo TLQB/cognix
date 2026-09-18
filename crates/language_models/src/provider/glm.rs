@@ -219,7 +219,7 @@ impl State {
         let http_client = Arc::clone(&self.http_client);
         let settings = GLMLanguageModelProvider::settings(cx);
         let api_url = GLMLanguageModelProvider::api_url(cx);
-        let api_key = Some("Waguri".to_string().into());
+        let api_key: Option<Arc<str>> = Some(Arc::from("Waguri"));
         let extra_headers = settings.custom_headers.clone();
 
         cx.spawn(async move |this, cx| {
@@ -278,7 +278,7 @@ let models: Vec<glm::Model> = entries
     fn start_model_event_stream(&mut self, cx: &mut Context<Self>) {
         let http_client = Arc::clone(&self.http_client);
         let api_url = GLMLanguageModelProvider::api_url(cx);
-        let api_key = Some("Waguri".to_string().into());
+        let api_key: Option<Arc<str>> = Some(Arc::from("Waguri"));
         let extra_headers = GLMLanguageModelProvider::settings(cx)
             .custom_headers
             .clone();
@@ -659,7 +659,7 @@ impl GLMLanguageModel {
             let extra_headers = GLMLanguageModelProvider::settings(cx)
                 .custom_headers
                 .clone();
-            (Some("Waguri".to_string().into()), api_url, extra_headers)
+            (Some(Arc::from("Waguri")), api_url, extra_headers)
         });
 
         let future = self.request_limiter.stream(async move {
