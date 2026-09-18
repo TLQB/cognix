@@ -74,3 +74,7 @@ build_utility.py
 # embedded zai-proxy sidecar artifacts (built by scripts/build-zai-proxy-sidecar.sh)
 crates/zai_proxy_sidecar/binaries/
 crates/zai_proxy_sidecar/binaries/
+
+# live credentials - never commit
+tokens.sqlite
+tokens.sqlite.live
