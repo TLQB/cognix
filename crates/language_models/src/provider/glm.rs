@@ -485,11 +485,17 @@ impl GLMLanguageModelProvider {
                                     credentials_provider,
                                     cx,
                                 );
-                                this.fetched_models.clear();
                                 this.model_event_task = None;
                                 write_recover(&this.loading_progress).clear();
                                 this.authenticate(cx).detach();
                             }
+                            // Capability edits (supports_images/tools/thinking) are
+                            // merged into the model list at build time, so the cached
+                            // fetched models must be dropped on ANY settings change,
+                            // not just a URL change — otherwise the old flags keep
+                            // gating image attachments until restart.
+                            this.fetched_models.clear();
+                            this.fetch_model_task = None;
                             cx.notify();
                         }
                     }
