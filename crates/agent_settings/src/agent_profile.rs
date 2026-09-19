@@ -19,9 +19,15 @@ pub mod builtin_profiles {
     pub const WRITE: &str = "write";
     pub const ASK: &str = "ask";
     pub const MINIMAL: &str = "minimal";
+    /// Composer mode: sending a message generates a slide deck instead of
+    /// chatting with the agent.
+    pub const SLIDES: &str = "slides";
 
     pub fn is_builtin(profile_id: &AgentProfileId) -> bool {
-        profile_id.as_str() == WRITE || profile_id.as_str() == ASK || profile_id.as_str() == MINIMAL
+        profile_id.as_str() == WRITE
+            || profile_id.as_str() == ASK
+            || profile_id.as_str() == MINIMAL
+            || profile_id.as_str() == SLIDES
     }
 }
 

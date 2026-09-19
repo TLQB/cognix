@@ -1,41 +1,39 @@
-//! "Generate Slides" — drive the embedded proxy's /v1/slides endpoint.
+//! "Generate Slides" — drive the embedded proxy's /v1/slides endpoint and
+//! package the result as a native, text-editable .pptx locally.
 //!
 //! The sidecar (zai-proxy on 127.0.0.1:3001) exposes POST /v1/slides: an
 //! OpenAI-style request in, an SSE stream of progress events out, ending in
 //! a deck event with one standalone HTML page per slide plus a global
-//! stylesheet. The sidecar also exposes /v1/slides/export/pptx, a
-//! passthrough to chat.z.ai's html-to-ppt conversion that accepts exactly
-//! that deck shape.
+//! stylesheet. The upstream Z.AI PPT export endpoints are NOT used: the old
+//! /sandbox/html-to-ppt now answers 405, and the live /api/v1/convert/ppt/
+//! stream only converts decks stored server-side per chatId (locally built
+//! decks get "Failed to get PPT slides: 404" from upstream itself).
+//! Instead `crate::pptx` renders the deck's text into real OOXML text boxes,
+//! so the .pptx opens in PowerPoint/LibreOffice with editable content.
 //!
-//! This module wires it into the editor: the agents_sidebar::GenerateSlides
-//! action takes a topic from the clipboard (copy the text describing the
-//! deck first), runs the generation, writes a standalone preview HTML into
-//! the first project directory, exports the .pptx next to it (best effort),
-//! and reports both paths in a toast.
+//! Entry points:
+//!   * the `slides` composer profile (agent panel) — the message text is the
+//!     topic and this action is dispatched with it;
+//!   * the command palette action, which falls back to the clipboard topic.
+//!
+//! Progress is reported by replacing a single toast at each stage: request
+//! sent, deck size, packaging, done.
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use futures::{AsyncBufReadExt, AsyncReadExt, StreamExt, io::BufReader};
+use futures::{AsyncBufReadExt, StreamExt, io::BufReader};
 use gpui::AppContext as _;
 use http_client::{AsyncBody, HttpClient};
 use serde::Deserialize;
 use workspace::Workspace;
+use zed_actions::slides::GenerateSlides;
 
 /// Base URL of the embedded sidecar.
 const SLIDES_BASE_URL: &str = "http://127.0.0.1:3001";
 /// Built-in sidecar auth password (mirrors the glm provider wiring).
 const PROXY_PASSWORD: &str = "Waguri";
-
-gpui::actions!(
-    agents_sidebar,
-    [
-        /// Generates an HTML slide deck (plus a best-effort .pptx export)
-        /// from the clipboard contents as the topic.
-        GenerateSlides,
-    ]
-);
 
 // ---------------------------------------------------------------- deck model
 
@@ -76,6 +74,20 @@ enum SlidesEvent {
 }
 
 // --------------------------------------------------------------- generation
+
+/// Wraps the raw topic with quality requirements unless the user already
+/// dictated a deck size (their text mentions "slide").
+fn enhance_topic(topic: String) -> String {
+    if topic.to_lowercase().contains("slide") {
+        return topic;
+    }
+    format!(
+        "{topic}\n\nPlease produce a complete presentation deck of 6 to 10 slides: \
+         a title slide, an agenda slide, well-developed content slides (3-5 concise \
+         bullets each, each bullet a full concrete statement, not a bare keyword), \
+         and a closing summary slide."
+    )
+}
 
 /// POSTs the authoring request and consumes the SSE stream until the final
 /// deck event (or an error event).
@@ -123,7 +135,7 @@ async fn collect_deck(
             Ok(SlidesEvent::Deck(deck)) => return Ok(deck),
             Ok(SlidesEvent::Error { error }) => last_error = Some(error),
             Ok(_) => {}
-            Err(_) => {}
+            Err(error) => log::debug!("unparsed slides SSE event: {error}"),
         }
     }
     Err(anyhow::anyhow!(
@@ -131,45 +143,72 @@ async fn collect_deck(
     ))
 }
 
-// ------------------------------------------------------------------- export
+// ------------------------------------------------------------ html -> pptx
 
-/// POSTs the deck to the sidecar's html-to-ppt passthrough and returns the
-/// pptx bytes. Best-effort by design: when the conversion service is
-/// unreachable the caller degrades to the HTML preview.
-async fn export_pptx(
-    client: Arc<dyn HttpClient>,
-    deck: &SlideDeckEvent,
-    filename: &str,
-) -> anyhow::Result<Vec<u8>> {
-    let html: Vec<_> = deck.slides.iter().map(|s| s.html.clone()).collect();
-    let css = vec![deck.global_css.clone()];
-    let body = serde_json::json!({
-        "chatId": deck.conversation_id,
-        "versionId": "v1",
-        "upload": false,
-        "filename": filename,
-        "files": {"html": html, "css": css},
-    })
-    .to_string();
-
-    let request = http::Request::builder()
-        .method(http::Method::POST)
-        .uri(format!("{SLIDES_BASE_URL}/v1/slides/export/pptx"))
-        .header("Content-Type", "application/json")
-        .header("Authorization", format!("Bearer {PROXY_PASSWORD}"))
-        .body(AsyncBody::from(body))?;
-
-    let mut response = client.send(request).await?;
-    let mut bytes = Vec::new();
-    response.body_mut().read_to_end(&mut bytes).await?;
-    if !response.status().is_success() {
-        anyhow::bail!(
-            "export endpoint returned {}: {}",
-            response.status(),
-            String::from_utf8_lossy(&bytes)
-        );
+/// Extracts the text content of every `<li>` in the fragment, falling back
+/// to stripped body lines when the slide uses no list markup.
+fn extract_bullets(html: &str) -> Vec<String> {
+    let mut bullets = Vec::new();
+    let mut rest = html;
+    while let Some(start) = rest.find("<li") {
+        let after_open = &rest[start..];
+        let Some(body_start) = after_open.find('>') else {
+            break;
+        };
+        let tail = &after_open[body_start + 1..];
+        let Some(end) = tail.find("</li>") else {
+            break;
+        };
+        let text = strip_tags(&tail[..end]);
+        if !text.is_empty() {
+            bullets.push(text);
+        }
+        rest = &tail[end + 4..];
     }
-    Ok(bytes)
+    if bullets.is_empty() {
+        bullets = strip_tags(html)
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .take(6)
+            .map(ToString::to_string)
+            .collect();
+    }
+    bullets.truncate(8);
+    bullets
+}
+
+fn strip_tags(fragment: &str) -> String {
+    let mut out = String::with_capacity(fragment.len());
+    let mut depth = 0usize;
+    for ch in fragment.chars() {
+        match ch {
+            '<' => depth += 1,
+            '>' => depth = depth.saturating_sub(1),
+            _ if depth == 0 => out.push(ch),
+            _ => {}
+        }
+    }
+    unescape_entities(&out)
+}
+
+fn unescape_entities(text: &str) -> String {
+    text.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace("&nbsp;", " ")
+}
+
+fn html_to_pptx_slides(deck: &SlideDeckEvent) -> Vec<pptx::Slide> {
+    deck.slides
+        .iter()
+        .map(|slide| pptx::Slide {
+            title: strip_tags(&slide.title),
+            bullets: extract_bullets(&slide.html),
+        })
+        .collect()
 }
 
 // -------------------------------------------------------------------- HTML
@@ -187,17 +226,16 @@ pub fn render_preview_html(deck: &SlideDeckEvent) -> String {
     let title = deck
         .slides
         .first()
-        .map(|s| html_escape(&s.title))
+        .map(|s| html_escape(&strip_tags(&s.title)))
         .unwrap_or_else(|| "Slides".to_string());
+    let css_open = "<style>";
+    let css_close = "</style>";
     format!(
-		"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>{title}</title>\n<style>\nbody {{ background: #2a2a2e; margin: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }}
-.page-wrap {{ width: 1280px; height: 720px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.45); background: #fff; }}
-{global_css}
-</style>\n</head>\n<body>{pages}</body>\n</html>\n",
-		title = title,
-		global_css = deck.global_css,
-		pages = pages,
-	)
+        "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>{title}</title>\n{css_open}\nbody {{ background: #2a2a2e; margin: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }}\n.page-wrap {{ width: 1280px; height: 720px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.45); background: #fff; }}\n{global_css}\n{css_close}\n</head>\n<body>{pages}</body>\n</html>\n",
+        title = title,
+        global_css = deck.global_css,
+        pages = pages,
+    )
 }
 
 fn html_escape(s: &str) -> String {
@@ -209,25 +247,32 @@ fn html_escape(s: &str) -> String {
 
 // ------------------------------------------------------------------ action
 
-/// Action handler (registered on Workspace): the clipboard is the topic.
+/// Action handler (registered on Workspace): the topic comes from the action
+/// payload (slides composer mode) or, failing that, from the clipboard.
 pub fn generate_slides(
     workspace: &mut Workspace,
-    _: &GenerateSlides,
+    action: &GenerateSlides,
     _window: &mut gpui::Window,
     cx: &mut gpui::Context<Workspace>,
 ) {
     struct SlidesNotification;
     let notification_id = workspace::notifications::NotificationId::unique::<SlidesNotification>();
-    let topic = current_topic(cx);
+    let topic = action
+        .topic
+        .clone()
+        .map(|text| text.trim().to_string())
+        .filter(|text| !text.is_empty())
+        .unwrap_or_else(|| current_topic(cx));
     if topic.is_empty() {
         workspace.show_toast(
-			workspace::Toast::new(
-				notification_id,
-				"No topic: copy the text describing the deck you want, then run Generate Slides again.",
-			)
-			.autohide(),
-			cx,
-		);
+            workspace::Toast::new(
+                notification_id,
+                "No topic: switch the composer to the Slides profile and type a request, \
+                 or copy the text describing the deck and run Generate Slides again.",
+            )
+            .autohide(),
+            cx,
+        );
         return;
     }
 
@@ -240,9 +285,21 @@ pub fn generate_slides(
         .unwrap_or_else(|| PathBuf::from("."));
 
     let client: Arc<dyn HttpClient> = workspace.app_state().client.http_client();
+    let (progress_tx, progress_rx) = async_channel::unbounded::<String>();
 
     let pipeline = cx.background_spawn(async move {
-        let deck = collect_deck(client.clone(), topic).await?;
+        progress_tx
+            .send("Requesting deck from the model…".to_string())
+            .await
+            .ok();
+        let deck = collect_deck(client.clone(), enhance_topic(topic)).await?;
+        progress_tx
+            .send(format!(
+                "Deck ready: {} slides. Packaging PPTX…",
+                deck.slides.len()
+            ))
+            .await
+            .ok();
 
         std::fs::create_dir_all(&out_dir)
             .with_context(|| format!("create output dir {:?}", out_dir))?;
@@ -251,47 +308,54 @@ pub fn generate_slides(
         std::fs::write(&html_path, render_preview_html(&deck))
             .with_context(|| format!("write {:?}", html_path))?;
 
-        let pptx_path = match export_pptx(client, &deck, "presentation.pptx").await {
-            Ok(bytes) => {
-                let pptx_path = out_dir.join("slides.pptx");
-                std::fs::write(&pptx_path, &bytes)
-                    .with_context(|| format!("write {:?}", pptx_path))?;
-                Some(pptx_path)
-            }
-            Err(err) => {
-                log::warn!("pptx export unavailable, keeping HTML preview: {err:#}");
-                None
-            }
-        };
-        Ok::<_, anyhow::Error>((html_path, pptx_path, deck.slides.len()))
+        let pptx_bytes = pptx::build(&html_to_pptx_slides(&deck), "presentation");
+        let pptx_path = out_dir.join("slides.pptx");
+        std::fs::write(&pptx_path, &pptx_bytes)
+            .with_context(|| format!("write {:?}", pptx_path))?;
+
+        Ok((html_path, pptx_path, deck.slides.len()))
+    });
+
+    let pump_id = notification_id.clone();
+    let pump = cx.spawn(async move |workspace, cx| {
+        while let Ok(status) = progress_rx.recv().await {
+            workspace
+                .update(cx, |workspace, cx| {
+                    workspace.show_toast(
+                        workspace::Toast::new(pump_id.clone(), status).autohide(),
+                        cx,
+                    );
+                })
+                .ok();
+        }
     });
 
     cx.spawn(async move |workspace, cx| {
         let result = pipeline.await;
+        drop(progress_tx);
+        pump.await;
         workspace
-			.update(cx, |workspace, cx| match result {
-				Ok((html_path, pptx_path, count)) => {
-					let summary = match pptx_path {
-						Some(pptx) => format!(
-							"Generated {count} slides.\nPreview: {}\nPPTX: {}",
-							html_path.display(),
-							pptx.display()
-						),
-						None => format!(
-							"Generated {count} slides.\nPreview: {}\nPPTX export unavailable (see log).",
-							html_path.display()
-						),
-					};
-					workspace.show_toast(workspace::Toast::new(notification_id, summary).autohide(), cx);
-				}
-				Err(err) => {
-					workspace.show_toast(
-						workspace::Toast::new(notification_id, format!("Slides failed: {err:#}")).autohide(),
-						cx,
-					);
-				}
-			})
-			.ok();
+            .update(cx, |workspace, cx| match result {
+                Ok((html_path, pptx_path, count)) => {
+                    let summary = format!(
+                        "Generated {count} slides.\nPreview: {}\nPPTX: {}",
+                        html_path.display(),
+                        pptx_path.display()
+                    );
+                    workspace.show_toast(
+                        workspace::Toast::new(notification_id, summary).autohide(),
+                        cx,
+                    );
+                }
+                Err(err) => {
+                    workspace.show_toast(
+                        workspace::Toast::new(notification_id, format!("Slides failed: {err:#}"))
+                            .autohide(),
+                        cx,
+                    );
+                }
+            })
+            .ok();
     })
     .detach();
 }

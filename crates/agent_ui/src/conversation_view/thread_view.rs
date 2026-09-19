@@ -1496,6 +1496,21 @@ impl ThreadView {
             return;
         }
 
+        // Slides mode: the profile turns the composer into a deck generator —
+        // the message text is the topic, no agent round-trip happens.
+        if thread.read(cx).profile().as_str() == agent_settings::builtin_profiles::SLIDES {
+            let topic = message_editor.read(cx).text(cx);
+            if !topic.trim().is_empty() {
+                message_editor.update(cx, |editor, cx| editor.clear(window, cx));
+                window.dispatch_action(
+                    Box::new(zed_actions::slides::GenerateSlides { topic: Some(topic) }),
+                    cx,
+                );
+            }
+            cx.notify();
+            return;
+        }
+
         if is_generating {
             cx.emit(AcpThreadViewEvent::Interacted);
             self.queue_message(message_editor, window, cx);

@@ -1274,6 +1274,11 @@
         "enable_all_context_servers": false,
         "tools": {},
       },
+      "slides": {
+        "name": "Slides",
+        "enable_all_context_servers": false,
+        "tools": {},
+      },
     },
     // Where to show notifications when the agent has either completed
     // its response, or else needs confirmation before it can run a
