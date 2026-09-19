@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 360
 
     env:
-      CARGO_BUILD_JOBS: 2
+      CARGO_BUILD_JOBS: 4
       CARGO_INCREMENTAL: 0
 
     steps:

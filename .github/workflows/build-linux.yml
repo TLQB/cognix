@@ -163,7 +163,7 @@ jobs:
 
       - name: Build
         run: |
-          export CARGO_BUILD_JOBS=2
+          export CARGO_BUILD_JOBS=4
           df -h / | tail -1
           free -h | head -2
           cargo build --release -p zed
