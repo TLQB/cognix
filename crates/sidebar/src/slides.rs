@@ -213,6 +213,7 @@ fn html_escape(s: &str) -> String {
 pub fn generate_slides(
     workspace: &mut Workspace,
     _: &GenerateSlides,
+    _window: &mut gpui::Window,
     cx: &mut gpui::Context<Workspace>,
 ) {
     struct SlidesNotification;
