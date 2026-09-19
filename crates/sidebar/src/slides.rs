@@ -234,7 +234,7 @@ pub fn generate_slides(
 		.read(cx)
 		.visible_worktrees(cx)
 		.next()
-		.map(|worktree| worktree.read(cx).abs_path().to_path_buf())
+		.map(|worktree| PathBuf::from(worktree.read(cx).abs_path().as_ref()))
 		.unwrap_or_else(|| PathBuf::from("."));
 
 	let client: Arc<dyn HttpClient> = workspace.app_state().client.http_client();
