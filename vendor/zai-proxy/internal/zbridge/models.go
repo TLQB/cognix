@@ -270,6 +270,17 @@ func modelsHandler(w http.ResponseWriter, r *http.Request) {
 	models = append(models, fetchQwenGatewayModels()...)
 	data := make([]map[string]interface{}, 0, len(models))
 	for _, m := range models {
+		caps := m.Capabilities
+		if caps == nil {
+			caps = map[string]interface{}{}
+		}
+		// The bridge's vision pipeline (files-array attachments) works with
+		// every model the upstream serves - it is attachment-shaped, and the
+		// model side decides what it can see. Advertise vision for all models
+		// so clients that gate image input on this flag do not block the user.
+		if _, ok := caps["vision"]; !ok {
+			caps["vision"] = true
+		}
 		data = append(data, map[string]interface{}{
 			"id":           m.ID,
 			"object":       "model",
@@ -277,6 +288,7 @@ func modelsHandler(w http.ResponseWriter, r *http.Request) {
 			"owned_by":     "z-ai",
 			"display_name": m.Name,
 			"description":  m.Description,
+			"capabilities": caps,
 		})
 	}
 	writeJSON(w, 200, map[string]interface{}{
