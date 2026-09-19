@@ -1,0 +1,40 @@
+name: Check changed crates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/glm/**"
+      - "crates/language_models/**"
+      - "crates/zai_proxy_sidecar/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: cargo check (glm, language_models)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        # Same bootstrap as build-linux: no default toolchain; rustup picks
+        # the version pinned in rust-toolchain.toml.
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
+          sh /tmp/rustup-init.sh -y --no-modify-path --profile minimal --default-toolchain none
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Cache cargo
+        # Reuses ~/.cargo and ./target between runs, so a push that only
+        # touches crates/glm re-checks glm + dependents instead of the whole
+        # dependency tree from scratch. Kept in this separate lightweight job
+        # so the disk-constrained release build (build-linux.yml) stays
+        # cache-free as designed.
+        uses: Swatinem/rust-cache@v2
+
+      - name: cargo check
+        run: cargo check -p glm -p language_models -p zai_proxy_sidecar --all-targets

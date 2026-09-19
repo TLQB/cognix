@@ -270,6 +270,10 @@ pub struct ModelEntry {
     /// Present in router mode; reports whether the model is currently loaded.
     #[serde(default)]
     pub status: Option<ModelStatus>,
+    /// Sidecar `/models` entries advertise capability flags here (e.g.
+    /// `vision`) instead of an `architecture` section.
+    #[serde(default)]
+    pub capabilities: Option<ModelCapabilities>,
 }
 
 impl ModelEntry {
@@ -293,10 +297,19 @@ impl ModelEntry {
             .is_some_and(|status| status.value == "loading")
     }
 
+    /// Image support is advertised either via an lmstudio-style
+    /// `architecture.input_modalities` section or, on the zai-proxy sidecar,
+    /// via `capabilities: {"vision": true}`.
     pub fn supports_images_hint(&self) -> bool {
-        self.architecture
+        let architecture_images = self
+            .architecture
             .as_ref()
-            .is_some_and(|architecture| architecture.input_modalities.iter().any(|m| m == "image"))
+            .is_some_and(|architecture| architecture.input_modalities.iter().any(|m| m == "image"));
+        architecture_images
+            || self
+                .capabilities
+                .as_ref()
+                .is_some_and(|capabilities| capabilities.vision == Some(true))
     }
 }
 
@@ -314,6 +327,15 @@ pub struct ModelMeta {
 pub struct Architecture {
     #[serde(default)]
     pub input_modalities: Vec<String>,
+}
+
+/// Capability flags from the sidecar `/models` payload; unknown keys are
+/// ignored by serde.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct ModelCapabilities {
+    /// Whether the model accepts image input.
+    #[serde(default)]
+    pub vision: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]

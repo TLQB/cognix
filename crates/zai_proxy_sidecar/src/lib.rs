@@ -3,7 +3,8 @@
 //! Release builds embed the vendored Go binary (see build.rs and
 //! scripts/build-zai-proxy-sidecar.sh). `init()` is fire-and-forget: it never
 //! delays app startup. On a background thread it
-//!   1. reuses an already-running proxy when /api/healthz answers on the port,
+//!   1. reuses an already-running proxy when /api/healthz answers AND the
+//!      running build is current (slides route + size match),
 //!   2. otherwise extracts the embedded binary to the user state dir, spawns
 //!      it and waits (bounded) for the health endpoint.
 //!
@@ -15,7 +16,7 @@
 //!      the zagent.glm provider UI (stored in the OS keychain by zed, mirrored
 //!      here so the Go proxy can read it on restart).
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::PathBuf;
@@ -26,6 +27,8 @@ use std::time::Duration;
 pub const PROXY_PORT: u16 = 3001;
 pub const PROXY_HOST: &str = "127.0.0.1";
 pub const PROXY_BASE_URL: &str = "http://127.0.0.1:3001";
+/// Built-in sidecar auth password (mirrors the glm provider wiring).
+pub const PROXY_PASSWORD: &str = "Waguri";
 
 static START: Once = Once::new();
 static CHILD: Mutex<Option<Child>> = Mutex::new(None);
@@ -129,7 +132,10 @@ fn stop_child() {
 }
 
 fn ensure_running() -> Result<()> {
-    if healthz_ok() {
+    // A proxy answering /api/healthz may still predate routes the editor
+    // depends on (slides was added later) or a stale extraction; restart it
+    // with the embedded build in that case.
+    if healthz_ok() && running_proxy_is_current() {
         return Ok(()); // already serving (previous launch, systemd unit, …)
     }
     if !embedded() {
@@ -138,6 +144,21 @@ fn ensure_running() -> Result<()> {
         );
     }
     let path = extracted_path();
+    if healthz_ok() {
+        // Obsolete or foreign instance: stop it BEFORE rewriting the
+        // binary — Windows locks executables while they run.
+        stop_stale_proxy();
+        // Give the stale listener a moment to release the port.
+        for _ in 0..25 {
+            if !healthz_ok() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(200));
+        }
+        // Drop the extracted copy so write_if_stale below cannot keep a
+        // same-size-but-different stale binary alive.
+        let _ = std::fs::remove_file(&path);
+    }
     write_if_stale(&path, PROXY_BYTES)?;
 
     // q-bless (auto-rebless helper) lands NEXT TO the session file so the
@@ -198,6 +219,76 @@ fn token_file_token() -> Option<String> {
         .filter(|s| !s.is_empty())
 }
 
+/// True when a live proxy on the port matches the embedded build: the
+/// extracted binary is the size we would deploy AND the running instance
+/// serves the routes the editor depends on.
+fn running_proxy_is_current() -> bool {
+    if !embedded() {
+        // Nothing to validate against; trust the running instance.
+        return true;
+    }
+    let path = extracted_path();
+    let same_binary = std::fs::metadata(&path)
+        .map(|m| m.len() as usize == PROXY_BYTES.len())
+        .unwrap_or(false);
+    // A current binary on disk says nothing about what is RUNNING; the
+    // running instance is only current when it also serves the slides
+    // route (added after the first release builds shipped).
+    same_binary && slides_route_available()
+}
+
+/// Probes whether the RUNNING proxy serves /v1/slides. slidesHandler answers
+/// a GET with 405; builds predating the slides routes fall through to the
+/// dashboard catch-all, which 404s unknown paths.
+fn slides_route_available() -> bool {
+    http_status("GET", "/v1/slides") == Some(405)
+}
+
+/// Minimal HTTP/1.0 request; returns the status code when a response head
+/// arrives.
+fn http_status(method: &str, path_with_query: &str) -> Option<u16> {
+    let Ok(mut s) = TcpStream::connect((PROXY_HOST, PROXY_PORT)) else {
+        return None;
+    };
+    s.set_read_timeout(Some(Duration::from_secs(2))).ok();
+    let req = format!(
+        "{method} {path_with_query} HTTP/1.0\r\nHost: {}:{}\r\n\r\n",
+        PROXY_HOST, PROXY_PORT
+    );
+    s.write_all(req.as_bytes()).ok()?;
+    let mut buf = [0u8; 128];
+    let mut head = String::new();
+    while head.len() < 32 {
+        match s.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => head.push_str(&String::from_utf8_lossy(&buf[..n])),
+            Err(_) => break,
+        }
+    }
+    let start = head.find(' ')?;
+    head[start + 1..].split_whitespace().next()?.parse().ok()
+}
+
+/// Stops an obsolete proxy so ensure_running can respawn the embedded
+/// build: our own child when we spawned it, otherwise the proxy's /stop
+/// endpoint (authenticated the same way the editor authenticates).
+fn stop_stale_proxy() {
+    if CHILD.lock().unwrap().is_some() {
+        stop_child();
+        return;
+    }
+    let Ok(mut s) = TcpStream::connect((PROXY_HOST, PROXY_PORT)) else {
+        return;
+    };
+    let req = format!(
+        "GET /stop HTTP/1.0\r\nHost: {}:{}\r\nAuthorization: Bearer {PROXY_PASSWORD}\r\n\r\n",
+        PROXY_HOST, PROXY_PORT
+    );
+    let _ = s.write_all(req.as_bytes());
+    let _ = s.flush();
+    let _ = s.read(&mut [0u8; 64]);
+}
+
 fn token_path() -> PathBuf {
     config_dir().join("zai-proxy").join("token")
 }
@@ -252,25 +343,5 @@ fn write_if_stale(path: &PathBuf, bytes: &[u8]) -> Result<()> {
 
 /// Minimal HTTP/1.0 GET — no client dependency; returns true on HTTP 200.
 fn healthz_ok() -> bool {
-    let Ok(mut s) = TcpStream::connect((PROXY_HOST, PROXY_PORT)) else {
-        return false;
-    };
-    s.set_read_timeout(Some(Duration::from_secs(2))).ok();
-    let req = format!(
-        "GET /api/healthz HTTP/1.0\r\nHost: {}:{}\r\n\r\n",
-        PROXY_HOST, PROXY_PORT
-    );
-    if s.write_all(req.as_bytes()).is_err() {
-        return false;
-    }
-    let mut buf = [0u8; 128];
-    let mut head = String::new();
-    while head.len() < 32 {
-        match s.read(&mut buf) {
-            Ok(0) => break,
-            Ok(n) => head.push_str(&String::from_utf8_lossy(&buf[..n])),
-            Err(_) => break,
-        }
-    }
-    head.starts_with("HTTP/") && head.contains(" 200")
+    http_status("GET", "/api/healthz") == Some(200)
 }
