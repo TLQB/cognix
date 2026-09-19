@@ -17,7 +17,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use futures::{AsyncBufReadExt, AsyncReadExt, io::BufReader};
+use futures::{AsyncBufReadExt, AsyncReadExt, StreamExt, io::BufReader};
+use gpui::AppContext as _;
 use http_client::{AsyncBody, HttpClient};
 use serde::Deserialize;
 use workspace::Workspace;
@@ -179,7 +180,7 @@ pub fn render_preview_html(deck: &SlideDeckEvent) -> String {
 	let mut pages = String::new();
 	for slide in &deck.slides {
 		pages.push_str(&format!(
-			"\n<div class=\"page-wrap\"\u003e\n{}\n</div>\n",
+			"\n<div class=\"page-wrap\">\n{}\n</div>\n",
 			slide.html
 		));
 	}
@@ -189,7 +190,7 @@ pub fn render_preview_html(deck: &SlideDeckEvent) -> String {
 		.map(|s| html_escape(&s.title))
 		.unwrap_or_else(|| "Slides".to_string());
 	format!(
-		"<!DOCTYPE html\u003e\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>{title}</title>\n<style>\nbody {{ background: #2a2a2e; margin: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }}
+		"<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>{title}</title>\n<style>\nbody {{ background: #2a2a2e; margin: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }}
 .page-wrap {{ width: 1280px; height: 720px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.45); background: #fff; }}
 {global_css}
 </style>\n</head>\n<body>{pages}</body>\n</html>\n",
